@@ -9,6 +9,14 @@ android {
         targetSdkVersion 22
         versionCode 4
         versionName "1.0"
+        ndk {
+            abiFilters 'armeabi', 'armeabi-v7a', 'armeabi-v8a'
+        }
+        manifestPlaceholders = [
+                JPUSH_PKGNAME : applicationId,
+                JPUSH_APPKEY : "c7327e921ca1869b6464751e", //JPush上注册的包名对应的appkey.
+                JPUSH_CHANNEL : "developer-default", //暂时填写默认值即可.
+        ]
     }
     buildTypes {
         release {
@@ -25,4 +33,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:22.2.0'
     compile 'com.baoyz.actionsheet:library:1.1.7'
     compile 'com.google.code.gson:gson:2.7'
+    compile 'cn.jiguang:jpush:2.1.9'
 }
