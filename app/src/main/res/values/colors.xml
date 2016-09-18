@@ -1,0 +1,10 @@
+<resources>
+    <color name="linear_pressed">#ffebebeb</color>
+    <color name="light_gray">#ffa2a2a2</color>
+    <color name="viewfinder_mask">#60000000</color>
+    <color name="main_theme_blue">#8dcc3f</color>
+    <color name="main_theme_light_blue">#84cc2b</color>
+    <color name="main_color">#efeff4</color>
+    <color name="yellow">#ff7f00</color>
+    <color name="yellow_light">#cd6800</color>
+</resources>
