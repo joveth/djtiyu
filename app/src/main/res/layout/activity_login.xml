@@ -1,123 +1,166 @@
-<ScrollView
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/main_color"
     >
-    <LinearLayout
-        android:id="@+id/login_form"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginBottom="20dp"
-        android:orientation="vertical"
-        android:paddingBottom="40dp"
-        android:weightSum="3">
-
+        android:layout_height="match_parent"
+        android:background="@color/main_color"
+        >
         <LinearLayout
+            android:id="@+id/login_form"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_weight="2"
-            android:orientation="vertical">
-
-            <com.djtiyu.m.djtiyu.util.RoundedImageView
-                android:id="@+id/login_user_logo"
-                xmlns:supwisdom="http://schemas.android.com/apk/res/com.djtiyu.m.djtiyu"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:layout_gravity="center_horizontal"
-                android:src="@mipmap/ic_launcher"
-                supwisdom:riv_corner_radius="50dp"/>
-
-            <LinearLayout
-                android:id="@+id/email_login_form"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            >
+            <RelativeLayout
+                android:id="@+id/top"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:layout_marginLeft="40dp"
-                android:layout_marginRight="40dp"
-                android:layout_marginTop="10dp"
-                android:orientation="vertical"
-                android:splitMotionEvents="false">
+                android:layout_alignParentBottom="true"
+                android:orientation="horizontal"
+                android:background="@color/login_bg"
+                android:padding="30dp"
+                >
+                <ImageView
+                    android:id="@+id/logo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@mipmap/loginlogo"
+                    android:layout_centerInParent="true"/>
+                <TextView
+                    android:id="@+id/goaway"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="跳过&lt;&lt;"
+                    android:textSize="20sp"
+                    android:textColor="#fff"
+                    android:layout_alignParentRight="true"/>
+            </RelativeLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="2"
+                android:orientation="vertical">
 
-
-                <EditText
-                    android:id="@+id/login_user"
-                    style="@style/login_edittext_style_2"
+                <LinearLayout
+                    android:id="@+id/email_login_form"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawableLeft="@mipmap/account_number"
-                    android:hint="手机号"
-                    android:inputType="number"
-                    android:maxLines="1"
-                    android:singleLine="true"/>
-
-                <EditText
-                    android:id="@+id/login_pwd"
-                    style="@style/login_edittext_style_2"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:drawableLeft="@mipmap/password"
-                    android:hint="密码"
-                    android:imeActionId="@+id/login"
-                    android:imeOptions="actionUnspecified"
-                    android:inputType="textPassword"
-                    android:maxLines="1"
-                    android:singleLine="true"
-                    android:textIsSelectable="false"/>
-
-                <Button
-                    android:id="@+id/sign_in_button"
-                    style="?android:textAppearanceSmall"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
-                    android:background="@drawable/login_btn_selector"
-                    android:padding="12dip"
-                    android:text="登录"
-                    android:textColor="@android:color/white"
-                    android:textSize="15sp"
-                    android:textStyle="bold"/>
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
-                    android:clickable="false"
-                    android:orientation="horizontal"
+                    android:layout_marginBottom="10dp"
+                    android:layout_marginLeft="40dp"
+                    android:layout_marginRight="40dp"
+                    android:layout_marginTop="10dp"
+                    android:orientation="vertical"
                     android:splitMotionEvents="false">
 
-                    <TextView
-                        android:id="@+id/login_regist"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentLeft="true"
-                        android:clickable="true"
-                        android:gravity="left"
-                        android:paddingBottom="15dp"
-                        android:paddingTop="15dp"
-                        android:text="注册"
-                        android:textColor="@drawable/blue_txt_selector"
-                        android:textSize="15sp"/>
 
-                    <TextView
-                        android:id="@+id/forget_pwd"
-                        android:layout_width="wrap_content"
+                    <EditText
+                        android:id="@+id/login_user"
+                        style="@style/login_edittext_style_2"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentRight="true"
-                        android:clickable="true"
-                        android:gravity="right"
-                        android:paddingBottom="15dp"
-                        android:paddingTop="15dp"
-                        android:text="忘记密码"
-                        android:textColor="@drawable/blue_txt_selector"
-                        android:textSize="15sp"/>
+                        android:drawableLeft="@mipmap/account_number"
+                        android:hint="手机号"
+                        android:inputType="number"
+                        android:maxLines="1"
+                        android:singleLine="true"/>
 
-                </RelativeLayout>
+                    <EditText
+                        android:id="@+id/login_pwd"
+                        style="@style/login_edittext_style_2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:drawableLeft="@mipmap/password"
+                        android:hint="密码"
+                        android:inputType="textPassword"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textIsSelectable="false"/>
+
+                    <Button
+                        android:id="@+id/sign_in_button"
+                        style="?android:textAppearanceSmall"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:background="@drawable/login_btn_selector"
+                        android:padding="12dip"
+                        android:text="登录"
+                        android:textColor="@android:color/white"
+                        android:textSize="15sp"
+                        android:textStyle="bold"/>
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:clickable="false"
+                        android:orientation="horizontal"
+                        android:splitMotionEvents="false">
+
+                        <TextView
+                            android:id="@+id/login_regist"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentLeft="true"
+                            android:clickable="true"
+                            android:gravity="left"
+                            android:paddingBottom="15dp"
+                            android:paddingTop="15dp"
+                            android:text="注册"
+                            android:textColor="@drawable/blue_txt_selector"
+                            android:textSize="15sp"/>
+
+                        <TextView
+                            android:id="@+id/forget_pwd"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentRight="true"
+                            android:clickable="true"
+                            android:gravity="right"
+                            android:paddingBottom="15dp"
+                            android:paddingTop="15dp"
+                            android:text="忘记密码"
+                            android:textColor="@drawable/blue_txt_selector"
+                            android:textSize="15sp"/>
+
+                    </RelativeLayout>
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
-</ScrollView>
-
-
+    </ScrollView>
+    <RelativeLayout
+        android:id="@+id/bottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:padding="20dp"
+        android:weightSum="3"
+        >
+        <ImageView
+            android:id="@+id/loginByWechat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/umeng_socialize_wechat"
+            android:layout_centerVertical="true"
+            android:layout_alignParentLeft="true"/>
+        <ImageView
+            android:id="@+id/loginByQQ"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:src="@drawable/umeng_socialize_qq_on"
+            android:layout_centerInParent="true"/>
+        <ImageView
+            android:id="@+id/loginBySina"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/umeng_socialize_sina_on"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"/>
+    </RelativeLayout>
+</RelativeLayout>

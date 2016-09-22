@@ -12,6 +12,7 @@
         android:background="#272636"
         android:minHeight="60dp"
         android:padding="10dp"
+        android:visibility="gone"
         >
         <TextView android:id="@+id/leftBtn"
                   android:layout_width="wrap_content"

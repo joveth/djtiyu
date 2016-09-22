@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import com.djtiyu.m.djtiyu.db.DBHelper;
 import com.djtiyu.m.djtiyu.util.CustomProgressDialog;
 import com.djtiyu.m.djtiyu.util.NetworkHandler;
 
@@ -15,12 +16,15 @@ import com.djtiyu.m.djtiyu.util.NetworkHandler;
 public class BaseActivity extends AppCompatActivity implements View.OnClickListener {
   protected NetworkHandler networkHandler;
   protected CustomProgressDialog progressDialog;
-
+  protected DBHelper dbHelper;
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     if(networkHandler==null){
       networkHandler = NetworkHandler.getInstance();
+    }
+    if(dbHelper==null){
+      dbHelper = DBHelper.getInstance(this);
     }
   }
 

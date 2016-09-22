@@ -7,4 +7,8 @@
     <color name="main_color">#efeff4</color>
     <color name="yellow">#ff7f00</color>
     <color name="yellow_light">#cd6800</color>
+    <color name="login_bg">#ff7f00</color>
+    <color name="login_line">#8a8a8a</color>
+    <color name="login_button">#666666</color>
+    <color name="login_button_light">#595959</color>
 </resources>

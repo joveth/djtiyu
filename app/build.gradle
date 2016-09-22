@@ -7,8 +7,8 @@ android {
         applicationId "com.djtiyu.m.djtiyu"
         minSdkVersion 14
         targetSdkVersion 22
-        versionCode 4
-        versionName "1.0"
+        versionCode 5
+        versionName '1.1'
         ndk {
             abiFilters 'armeabi', 'armeabi-v7a', 'armeabi-v8a'
         }
@@ -28,7 +28,7 @@ android {
     }
     android.applicationVariants.all { variant ->
         variant.outputs.each { output ->
-            output.outputFile = new File(output.outputFile.parent, + "点将体育-v" +
+            output.outputFile = new File(output.outputFile.parent, "点将体育-v" +
                     defaultConfig.versionName + "-" + defaultConfig.versionCode + ".apk" );
         }
     }
@@ -40,4 +40,12 @@ dependencies {
     compile 'com.baoyz.actionsheet:library:1.1.7'
     compile 'com.google.code.gson:gson:2.7'
     compile 'cn.jiguang:jpush:2.1.9'
+    compile files('libs/mta-sdk-1.6.2.jar')
+    compile files('libs/open_sdk_r5756.jar')
+    compile files('libs/SocialSDK_QQZone_3.jar')
+    compile files('libs/SocialSDK_Sina.jar')
+    compile files('libs/SocialSDK_WeiXin_1.jar')
+    compile files('libs/SocialSDK_WeiXin_2.jar')
+    compile files('libs/umeng_social_sdk.jar')
+    compile files('libs/weiboSDKCore_3.1.4.jar')
 }

@@ -29,26 +29,35 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.baoyz.actionsheet.ActionSheet;
+import com.djtiyu.m.djtiyu.db.BeanPropEnum;
+import com.djtiyu.m.djtiyu.util.Callback;
 import com.djtiyu.m.djtiyu.util.CommonUtil;
 import com.djtiyu.m.djtiyu.util.Constants;
+import com.djtiyu.m.djtiyu.util.CustomProgressDialog;
 import com.djtiyu.m.djtiyu.util.FileUtil;
+import com.djtiyu.m.djtiyu.util.TransResp;
 import com.djtiyu.m.djtiyu.util.UpdateManagerService;
 
+import org.apache.http.NameValuePair;
 import org.apache.http.cookie.Cookie;
+import org.apache.http.message.BasicNameValuePair;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import cn.jpush.android.api.JPushInterface;
+import cn.jpush.android.api.TagAliasCallback;
 
 public class MainActivity extends BaseActivity implements ActionSheet.ActionSheetListener {
 
   public static final String APP_CACAHE_DIRNAME = "/webcache";
-  private View vLeftBtn, vRightBtn, vNoNetWork, vRetryBtn;
+  private View vLeftBtn, vRightBtn, vNoNetWork, vRetryBtn,vTopBar;
   private TextView vTitleTxt;
   private WebView webView;
   private ProgressBar bar;
-  private static final String BASE_URL = "http://m.djtiyu.com/myphone/html/m_enter.html";
-  private boolean hasLoaded = false;
+  private boolean hasLoaded = false, loginedOnce, logined, needBackHome;
   private ValueCallback<Uri> mUploadMessage;
   private ValueCallback<Uri[]> mUploadMessageForAndroid5;
   private ActionSheet.Builder actionSheet;
@@ -57,9 +66,10 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
   private static final int CAMERA_REQUEST_CODE = 1;
   private static final int RESULT_REQUEST_CODE = 2;
   private static final int PHOTO_REQUEST_CODE = 3;
-  private String lastUrl;
+  private String lastUrl, acc, pwd;
   private File tempFile;
   private Uri uri;
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -74,6 +84,7 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
   }
 
   private void initView() {
+    vTopBar = findViewById(R.id.topBar);
     vLeftBtn = findViewById(R.id.leftBtn);
     vLeftBtn.setOnClickListener(this);
     vTitleTxt = (TextView) findViewById(R.id.titleTxt);
@@ -107,9 +118,16 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
       @Override
       public boolean shouldOverrideUrlLoading(WebView view, String url) {
         if (url.contains("m_login")) {
-          switchTo(LoginActivity.class);
+          logined = false;
+          doAutoLogin();
           return true;
         }
+        if (!url.contains("m_enter")) {
+          if (vTopBar.getVisibility() == View.GONE) {
+            vTopBar.setVisibility(View.VISIBLE);
+          }
+        }
+        lastUrl = url;
         webView.loadUrl(url);
         return true;
       }
@@ -213,9 +231,51 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
         showSelector();
       }
     });
-    webView.loadUrl(BASE_URL);
+    webView.loadUrl(Constants.BASE_URL);
   }
 
+  private void doAutoLogin() {
+    acc = dbHelper.getValue(BeanPropEnum.AppProp.acc.toString());
+    pwd = dbHelper.getValue(BeanPropEnum.AppProp.pwd.toString());
+    if (!CommonUtil.isEmpty(acc) && !CommonUtil.isEmpty(pwd) && !loginedOnce) {
+      //doLogin();
+      switchTo(LoginActivity.class);
+    } else {
+      switchTo(LoginActivity.class);
+    }
+  }
+
+  private void doLogin() {
+    if (progressDialog == null) {
+      progressDialog = new CustomProgressDialog(this, "正在登录...", false);
+    }
+    progressDialog.setMsg("正在登录...");
+    progressDialog.show();
+    List<NameValuePair> paramspost = new ArrayList<NameValuePair>();
+    paramspost.add(new BasicNameValuePair("loginName_login", acc));
+    paramspost.add(new BasicNameValuePair("passWord_login", pwd));
+    networkHandler.post(Constants.LOGIN_URL, paramspost, 15, new Callback<TransResp>() {
+      @Override
+      public void callback(TransResp transResp) {
+        if (transResp.getRetcode() == 200) {
+          progressDialog.dismiss();
+          if ("0".equals(transResp.getRetjson())) {
+            loadMain();
+            return;
+          } else {
+            Toast.makeText(MainActivity.this, "登录失败了", Toast.LENGTH_SHORT).show();
+            switchTo(LoginActivity.class);
+          }
+        } else {
+          progressDialog.dismiss();
+          Toast.makeText(MainActivity.this, "登录失败了", Toast.LENGTH_SHORT).show();
+          switchTo(LoginActivity.class);
+          return;
+        }
+      }
+    });
+
+  }
 
   private long exitTime = 0;
 
@@ -234,6 +294,11 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
     if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
       if (actionSheet != null && isShowing) {
         actionSheet1.dismiss();
+        return true;
+      }
+      if (needBackHome) {
+        webView.loadUrl(Constants.HOME_URL);
+        needBackHome = false;
         return true;
       }
       if (webView.canGoBack()) {
@@ -394,27 +459,48 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
           }
         } else if (msg.what == 101) {
           //注册
-          webView.loadUrl("http://m.djtiyu.com/myphone/html/m_register.html");
+          webView.loadUrl(Constants.REG_URL);
         } else if (msg.what == 102) {
           //忘记密码
-          webView.loadUrl("http://m.djtiyu.com/myphone/html/m_resetpwd.html");
-        } else if(msg.what==103){
+          webView.loadUrl(Constants.PWD_URL);
+        } else if (msg.what == 103) {
           //大厅
-          CookieSyncManager.createInstance(MainActivity.this);
-          CookieManager cookieManager = CookieManager.getInstance();
-          Cookie sessionCookie = Constants.LOGINCOOKIE;
-          if (sessionCookie != null) {
-            String cookieString = sessionCookie.getName() + "="
-                + sessionCookie.getValue() + "; domain="
-                + sessionCookie.getDomain();
-            cookieManager.setCookie("http://m.djtiyu.com/myphone/html/m_hall.html", cookieString);
-            CookieSyncManager.getInstance().sync();
+          loginedOnce = true;
+          logined = true;
+          String acc = (String) msg.obj;
+          setAlias(acc);
+          loadMain();
+        } else if (msg.what == 104) {
+          lastUrl = Constants.MSG_URL;
+          needBackHome = true;
+          if (!logined) {
+            loginedOnce = false;
+            doAutoLogin();
+          } else {
+            webView.loadUrl(lastUrl);
           }
-          webView.loadUrl("http://m.djtiyu.com/myphone/html/m_hall.html");
         }
         super.handleMessage(msg);
       }
     };
+  }
+
+  private void loadMain() {
+    CookieSyncManager.createInstance(MainActivity.this);
+    CookieManager cookieManager = CookieManager.getInstance();
+    Cookie sessionCookie = Constants.LOGINCOOKIE;
+    if (sessionCookie != null) {
+      String cookieString = sessionCookie.getName() + "="
+          + sessionCookie.getValue() + "; domain="
+          + sessionCookie.getDomain();
+      cookieManager.setCookie(Constants.HOME_URL, cookieString);
+      CookieSyncManager.getInstance().sync();
+    }
+    if (!CommonUtil.isEmpty(lastUrl)) {
+      webView.loadUrl(lastUrl);
+    } else {
+      webView.loadUrl(Constants.HOME_URL);
+    }
   }
 
   @Override
@@ -471,7 +557,50 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
     }
   }
 
-  private void setCostomMsg(String msg){
+  private void setAlias(String userid) {
+
+    // 调用 Handler 来异步设置别名
+    pushHandler.sendMessage(pushHandler.obtainMessage(MSG_SET_ALIAS, userid));
+  }
+
+  private final TagAliasCallback mAliasCallback = new TagAliasCallback() {
+    @Override
+    public void gotResult(int code, String alias, Set<String> tags) {
+      String logs;
+      switch (code) {
+        case 0:
+          logs = "Set tag and alias success";
+          // 建议这里往 SharePreference 里写一个成功设置的状态。成功设置一次后，以后不必再次设置了。
+          break;
+        case 6002:
+          logs = "Failed to set alias and tags due to timeout. Try again after 60s.";
+          // 延迟 60 秒来调用 Handler 设置别名
+          pushHandler.sendMessageDelayed(mHandler.obtainMessage(MSG_SET_ALIAS, alias), 1000 * 60);
+          break;
+        default:
+          logs = "Failed with errorCode = " + code;
+      }
+    }
+  };
+  private static final int MSG_SET_ALIAS = 1001;
+  private final Handler pushHandler = new Handler() {
+    @Override
+    public void handleMessage(android.os.Message msg) {
+      super.handleMessage(msg);
+      switch (msg.what) {
+        case MSG_SET_ALIAS:
+          // 调用 JPush 接口来设置别名。
+          JPushInterface.setAliasAndTags(getApplicationContext(),
+              (String) msg.obj,
+              null,
+              mAliasCallback);
+          break;
+        default:
+      }
+    }
+  };
+
+  private void setCostomMsg(String msg) {
 
   }
 
