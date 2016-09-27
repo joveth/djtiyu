@@ -90,6 +90,7 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
     vTitleTxt = (TextView) findViewById(R.id.titleTxt);
     vRightBtn = findViewById(R.id.rightBtn);
     vRightBtn.setOnClickListener(this);
+
     vNoNetWork = findViewById(R.id.no_network_view);
     vRetryBtn = findViewById(R.id.network_retry_btn);
     vRetryBtn.setOnClickListener(this);
@@ -122,18 +123,25 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
           doAutoLogin();
           return true;
         }
+        lastUrl = url;
         if (!url.contains("m_enter")) {
           if (vTopBar.getVisibility() == View.GONE) {
             vTopBar.setVisibility(View.VISIBLE);
           }
+        } else {
+          lastUrl = null;
         }
-        lastUrl = url;
         webView.loadUrl(url);
         return true;
       }
 
       @Override
       public void onPageStarted(WebView view, String url, Bitmap favicon) {
+        if (!url.contains("m_enter")) {
+          if (vTopBar.getVisibility() == View.GONE) {
+            vTopBar.setVisibility(View.VISIBLE);
+          }
+        }
         if (url.contains("m_enter") && !hasLoaded) {
           webView.clearHistory();
           vLeftBtn.setVisibility(View.GONE);
@@ -477,6 +485,14 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
             loginedOnce = false;
             doAutoLogin();
           } else {
+            webView.loadUrl(lastUrl);
+          }
+        }else if(msg.what==105){
+          webView.loadUrl(Constants.HOME_URL);
+        }else if(msg.what==106){
+          if(CommonUtil.isEmpty(lastUrl)) {
+            webView.loadUrl(Constants.HOME_URL);
+          }else {
             webView.loadUrl(lastUrl);
           }
         }

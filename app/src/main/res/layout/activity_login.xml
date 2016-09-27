@@ -6,7 +6,8 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/main_color"
+        android:background="@color/white"
+        android:fillViewport="true"
         >
         <LinearLayout
             android:id="@+id/login_form"
@@ -33,7 +34,8 @@
                     android:id="@+id/goaway"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="跳过&lt;&lt;"
+                    android:paddingTop="10dp"
+                    android:text="跳过&gt;&gt;"
                     android:textSize="20sp"
                     android:textColor="#fff"
                     android:layout_alignParentRight="true"/>
@@ -85,7 +87,7 @@
                         style="?android:textAppearanceSmall"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
+                        android:layout_marginTop="30dp"
                         android:background="@drawable/login_btn_selector"
                         android:padding="12dip"
                         android:text="登录"
@@ -138,29 +140,31 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:orientation="horizontal"
-        android:padding="20dp"
+        android:padding="10dp"
         android:weightSum="3"
+        android:background="@color/login_bg"
         >
         <ImageView
             android:id="@+id/loginByWechat"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/umeng_socialize_wechat"
+            android:src="@mipmap/wechat"
             android:layout_centerVertical="true"
             android:layout_alignParentLeft="true"/>
-        <ImageView
-            android:id="@+id/loginByQQ"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:src="@drawable/umeng_socialize_qq_on"
-            android:layout_centerInParent="true"/>
         <ImageView
             android:id="@+id/loginBySina"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/umeng_socialize_sina_on"
+            android:src="@mipmap/sina"
+            android:layout_centerInParent="true"
+            />
+        <ImageView
+            android:id="@+id/loginByQQ"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@mipmap/qq"
             android:layout_centerVertical="true"
-            android:layout_alignParentRight="true"/>
+            android:layout_alignParentRight="true"
+            />
     </RelativeLayout>
 </RelativeLayout>

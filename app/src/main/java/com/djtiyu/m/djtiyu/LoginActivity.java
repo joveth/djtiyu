@@ -4,21 +4,26 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.djtiyu.m.djtiyu.db.BeanPropEnum;
+import com.djtiyu.m.djtiyu.db.QQRetBean;
+import com.djtiyu.m.djtiyu.db.QQUserInfor;
 import com.djtiyu.m.djtiyu.util.Callback;
 import com.djtiyu.m.djtiyu.util.CommonUtil;
 import com.djtiyu.m.djtiyu.util.Constants;
 import com.djtiyu.m.djtiyu.util.CustomProgressDialog;
 import com.djtiyu.m.djtiyu.util.TransResp;
+import com.google.gson.Gson;
 import com.umeng.socialize.PlatformConfig;
 import com.umeng.socialize.UMAuthListener;
 import com.umeng.socialize.UMShareAPI;
 import com.umeng.socialize.bean.SHARE_MEDIA;
 
+import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
@@ -30,10 +35,12 @@ import java.util.Map;
  * Created by shuwei on 16/9/13.
  */
 public class LoginActivity extends BaseActivity {
-  private View vRegisterBtn, vForgetBtn, vLoginBtn, vLoginByWechat, vLoginByQQ, vLoginBySina;
+  private View vGoaway, vRegisterBtn, vForgetBtn, vLoginBtn, vLoginByWechat, vLoginByQQ, vLoginBySina;
   private EditText vAcc, vPwd;
   private String acc, pwd;
   private UMShareAPI mShareAPI = null;
+  private Gson gson = new Gson();
+
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -45,15 +52,18 @@ public class LoginActivity extends BaseActivity {
 
   private void setPlatform() {
     //微信
-    PlatformConfig.setWeixin("wx1456b79a89aa2037", "ac0cb8672ccd67159dd7b46ac85f02ac");
+    PlatformConfig.setWeixin(Constants.WECHAT_APPID, Constants.WECHAT_APPKEY);
     //新浪微博
-    PlatformConfig.setSinaWeibo("3375114410", "2632b93d69672ca8921bb11aed215856");
+    PlatformConfig.setSinaWeibo(Constants.SINA_APPID, Constants.SINA_APPKEY);
     // qq qzone appid appkey
-    PlatformConfig.setQQZone("100424468", "c7394704798a158208a74ab60104f0ba");
+    PlatformConfig.setQQZone(Constants.QQ_APPID, Constants.QQ_APPKEY);
     mShareAPI = UMShareAPI.get(this);
   }
 
   private void initView() {
+    vGoaway = findViewById(R.id.goaway);
+    vGoaway.setOnClickListener(this);
+
     vRegisterBtn = findViewById(R.id.login_regist);
     vRegisterBtn.setOnClickListener(this);
 
@@ -107,9 +117,27 @@ public class LoginActivity extends BaseActivity {
       case R.id.sign_in_button:
         doLogin();
         break;
+      case R.id.goaway:
+        Message pas = new Message();
+        pas.what = 105;
+        MainActivity.mHandler.sendMessage(pas);
+        this.finish();
+        break;
       default:
         onClickAuth(v);
+        break;
     }
+  }
+
+  @Override
+  public boolean onKeyDown(int keyCode, KeyEvent event) {
+    if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
+      Message pas = new Message();
+      pas.what = 106;
+      MainActivity.mHandler.sendMessage(pas);
+      this.finish();
+    }
+    return super.onKeyDown(keyCode, event);
   }
 
   private void doLogin() {
@@ -190,7 +218,7 @@ public class LoginActivity extends BaseActivity {
     public void onComplete(SHARE_MEDIA platform, int action, Map<String, String> data) {
       Toast.makeText(getApplicationContext(), "Authorize succeed", Toast.LENGTH_SHORT).show();
       Log.d("user info", "user info:" + data.toString());
-      getUserInfor(platform,data);
+      getUserInfor(platform, data );
     }
 
     @Override
@@ -229,15 +257,85 @@ public class LoginActivity extends BaseActivity {
     mShareAPI.onActivityResult(requestCode, resultCode, data);
   }
 
-  private void getUserInfor(SHARE_MEDIA platform,  Map<String, String> data){
+  private void getUserInfor(SHARE_MEDIA platform, Map<String, String> data) {
     if (progressDialog == null) {
       progressDialog = new CustomProgressDialog(this, "正在登录...", false);
     }
-    progressDialog.setMsg("正在登录...");
+    progressDialog.setMsg("正在授权...");
     progressDialog.show();
+    final List<NameValuePair> paramspost = new ArrayList<NameValuePair>();
+    String url = "";
+    int method = 1;
+    final QQRetBean qqRetBean =  new QQRetBean();
+    if (platform == SHARE_MEDIA.QQ) {
+      try {
+        qqRetBean.setAccess_token(data.get("access_token"));
+        qqRetBean.setAppid(Constants.QQ_APPID);
+        qqRetBean.setOpenid(data.get("openid"));
+        qqRetBean.setExpires_in(data.get("expires_in"));
 
+        url = "https://graph.qq.com/user/get_user_info?access_token=" + qqRetBean.getAccess_token() + "&oauth_consumer_key=" + Constants.QQ_APPID + "&openid=" + qqRetBean.getOpenid();
+        method = 1;
+        paramspost.add(new BasicNameValuePair("openid", qqRetBean.getOpenid()));
+        paramspost.add(new BasicNameValuePair("access_token", qqRetBean.getAccess_token()));
+        paramspost.add(new BasicNameValuePair("appid", Constants.QQ_APPID));
+        paramspost.add(new BasicNameValuePair("expires_in", qqRetBean.getExpires_in()));
+      } catch (Exception e) {
+        progressDialog.dismiss();
+        showSimpleMessageDialog("授权失败了");
+        return;
+      }
+    } else if (platform == SHARE_MEDIA.SINA) {
 
+    } else if (platform == SHARE_MEDIA.WEIXIN) {
 
+    }
+    if (method == 1) {
+      networkHandler.get(url, null, 30, new Callback<TransResp>() {
+        @Override
+        public void callback(TransResp transResp) {
+          if (transResp.getRetcode() == HttpStatus.SC_OK) {
+            try {
+              QQUserInfor userInfor = gson.fromJson(transResp.getRetjson(), QQUserInfor.class);
+//              paramspost.add(new BasicNameValuePair("nickname", userInfor.getNickname()));
+//              paramspost.add(new BasicNameValuePair("gender", userInfor.getGender()));
+//              paramspost.add(new BasicNameValuePair("province", userInfor.getProvince()));
+//              paramspost.add(new BasicNameValuePair("city", userInfor.getCity()));
+//              paramspost.add(new BasicNameValuePair("figureurl", userInfor.getFigureurl()));
+//              paramspost.add(new BasicNameValuePair("figureurl_1", userInfor.getFigureurl_1()));
+//              paramspost.add(new BasicNameValuePair("figureurl_2", userInfor.getFigureurl_2()));
+//              paramspost.add(new BasicNameValuePair("figureurl_qq_1", userInfor.getFigureurl_qq_1()));
+//              paramspost.add(new BasicNameValuePair("figureurl_qq_2", userInfor.getFigureurl_qq_2()));
+              userInfor.setAccess_token(qqRetBean.getAccess_token());
+              userInfor.setOpenid(qqRetBean.getOpenid());
+              doSendToServer(userInfor);
+            } catch (Exception e) {
+              progressDialog.dismiss();
+              showSimpleMessageDialog("授权失败了");
+            }
+          } else {
+            progressDialog.dismiss();
+            showSimpleMessageDialog("授权失败了");
+          }
+        }
+      });
+    }
+  }
 
+  private void doSendToServer(final QQUserInfor paramspost) {
+    String json = gson.toJson(paramspost);
+
+    networkHandler.postJson("http://m.djtiyu.com/myphone/html/m_LoginPlayerInfo", json, 30, new Callback<TransResp>() {
+      @Override
+      public void callback(TransResp transResp) {
+        if (transResp.getRetcode() == HttpStatus.SC_OK) {
+          progressDialog.dismiss();
+          showSimpleMessageDialog(transResp.getRetjson());
+        } else {
+          progressDialog.dismiss();
+          showSimpleMessageDialog("授权失败了"+transResp.getRetcode());
+        }
+      }
+    });
   }
 }

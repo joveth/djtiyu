@@ -30,7 +30,7 @@ public class HttpUtil {
         SchemeRegistry schemeRegistry = new SchemeRegistry();
         if (url.startsWith("https")){
             int port = 443;
-            if (url.lastIndexOf(":")>-1){
+            if (url.replace("https:","").lastIndexOf(":")>-1){
                 if (url.substring(url.lastIndexOf(":")).contains("/")) {
                     port = Integer.parseInt(url.substring(url.lastIndexOf(":") + 1).substring(0, url.substring(url.lastIndexOf(":")).indexOf("/") - 1));
                 }else{

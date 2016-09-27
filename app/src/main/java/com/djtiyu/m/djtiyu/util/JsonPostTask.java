@@ -13,13 +13,14 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.CookieStore;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.cookie.Cookie;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HTTP;
@@ -29,17 +30,18 @@ import org.apache.http.util.EntityUtils;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URLEncoder;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
-public class PostTask extends AsyncTask<String, String, TransResp> {
+public class JsonPostTask extends AsyncTask<String, String, TransResp> {
 
   private final String url;
   private int timeout;
   private final Callback<TransResp> callback;
-  private List<NameValuePair> paramspost;
+  private String paramspost;
 
-  PostTask(String url, List<NameValuePair> paramspost, int timeout, Callback<TransResp> callback) {
+  JsonPostTask(String url, String paramspost, int timeout, Callback<TransResp> callback) {
     this.url = url;
     this.timeout = timeout;
     this.callback = callback;
@@ -52,11 +54,14 @@ public class PostTask extends AsyncTask<String, String, TransResp> {
     HttpPost post = new HttpPost(url);
     HttpResponse httpResponse;
     try {
-      if (paramspost != null) {
-        post.setEntity(new UrlEncodedFormEntity(paramspost, HTTP.UTF_8));
+      if (!CommonUtil.isEmpty(paramspost)) {
+        String encoderJson = URLEncoder.encode(paramspost, HTTP.UTF_8);
+        post.addHeader(HTTP.CONTENT_TYPE, "application/json");
+        StringEntity se = new StringEntity(encoderJson);
+        //se.setContentType("text/json");
+        se.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+        post.setEntity(se);
       }
-      post.setHeader("Content-Type", "application/x-www-form-urlencoded");
-      post.setHeader("Accept-Encoding", "gzip,deflate");
       DefaultHttpClient httpClient = new DefaultHttpClient();
       httpClient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, timeout);
       HttpContext context = new BasicHttpContext();

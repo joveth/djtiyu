@@ -2,10 +2,10 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:windowTranslucentStatus">false</item>
-        <item name="android:windowTranslucentNavigation">true</item>
-        <!--Android 5.x开始需要把颜色设置透明，否则导航栏会呈现系统默认的浅灰色-->
-        <item name="android:statusBarColor">#272636</item>
+        <!--<item name="android:windowTranslucentStatus">false</item>-->
+        <!--<item name="android:windowTranslucentNavigation">true</item>-->
+        <!--&lt;!&ndash;Android 5.x开始需要把颜色设置透明，否则导航栏会呈现系统默认的浅灰色&ndash;&gt;-->
+        <!--<item name="android:statusBarColor">#272636</item>-->
         <item name="actionSheetStyle">@style/ActionSheetStyleiOS7</item>
     </style>
     <style name="CustomDialog" parent="@android:style/Theme.Dialog">
@@ -31,11 +31,11 @@
         <item name="android:windowNoTitle">true</item>
     </style>
     <style name="login_edittext_style_2" parent="@android:style/Widget.EditText">
-        <item name="android:background">@drawable/small_corner</item>
+        <item name="android:background">@drawable/edit_selector</item>
         <item name="android:padding">15dp</item>
         <item name="android:textColor">@android:color/black</item>
         <item name="android:layout_marginTop">15dp</item>
-        <item name="android:drawablePadding">15dp</item>
+        <item name="android:drawablePadding">20dp</item>
         <item name="android:textSize">16sp</item>
     </style>
 </resources>
