@@ -38,7 +38,7 @@ public class GetTask extends AsyncTask<String, Long, TransResp> {
             }*/
             String result = null;
             HttpGet httpGet = new HttpGet(url);
-            HttpClient httpClient = HttpUtil.getHttpsClient(url,timeout);
+            HttpClient httpClient = HttpUtil.getHttpsClient(url,timeout*1000);
             if(queryParams!=null){
                 httpGet.setParams(queryParams);
             }

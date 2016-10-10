@@ -58,7 +58,7 @@ public class PostTask extends AsyncTask<String, String, TransResp> {
       post.setHeader("Content-Type", "application/x-www-form-urlencoded");
       post.setHeader("Accept-Encoding", "gzip,deflate");
       DefaultHttpClient httpClient = new DefaultHttpClient();
-      httpClient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, timeout);
+      httpClient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, timeout*1000);
       HttpContext context = new BasicHttpContext();
       CookieStore cookieStore = new BasicCookieStore();
       context.setAttribute(ClientContext.COOKIE_STORE, cookieStore);

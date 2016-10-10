@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.djtiyu.m.djtiyu.db.BeanPropEnum;
+import com.djtiyu.m.djtiyu.db.MsgCodeBean;
 import com.djtiyu.m.djtiyu.db.QQRetBean;
 import com.djtiyu.m.djtiyu.db.QQUserInfor;
 import com.djtiyu.m.djtiyu.util.Callback;
@@ -200,6 +201,7 @@ public class LoginActivity extends BaseActivity {
       platform = SHARE_MEDIA.QQ;
     } else if (view.getId() == R.id.loginByWechat) {
       platform = SHARE_MEDIA.WEIXIN;
+      //mShareAPI.deleteOauth(LoginActivity.this,platform,umdelAuthListener);
     } else {
       return;
     }
@@ -216,19 +218,20 @@ public class LoginActivity extends BaseActivity {
   private UMAuthListener umAuthListener = new UMAuthListener() {
     @Override
     public void onComplete(SHARE_MEDIA platform, int action, Map<String, String> data) {
-      Toast.makeText(getApplicationContext(), "Authorize succeed", Toast.LENGTH_SHORT).show();
+      //Toast.makeText(getApplicationContext(), "Authorize succeed", Toast.LENGTH_SHORT).show();
       Log.d("user info", "user info:" + data.toString());
-      getUserInfor(platform, data );
+      //showSimpleMessageDialog(data.toString());
+      getUserInfor(platform, data);
     }
 
     @Override
     public void onError(SHARE_MEDIA platform, int action, Throwable t) {
-      Toast.makeText(getApplicationContext(), "Authorize fail", Toast.LENGTH_SHORT).show();
+      Toast.makeText(getApplicationContext(), "授权失败了", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onCancel(SHARE_MEDIA platform, int action) {
-      Toast.makeText(getApplicationContext(), "Authorize cancel", Toast.LENGTH_SHORT).show();
+      Toast.makeText(getApplicationContext(), "未授权", Toast.LENGTH_SHORT).show();
     }
   };
   /**
@@ -256,30 +259,23 @@ public class LoginActivity extends BaseActivity {
     super.onActivityResult(requestCode, resultCode, data);
     mShareAPI.onActivityResult(requestCode, resultCode, data);
   }
-
+  private int method;
   private void getUserInfor(SHARE_MEDIA platform, Map<String, String> data) {
     if (progressDialog == null) {
-      progressDialog = new CustomProgressDialog(this, "正在登录...", false);
+      progressDialog = new CustomProgressDialog(this, "正在授权...", false);
     }
     progressDialog.setMsg("正在授权...");
     progressDialog.show();
-    final List<NameValuePair> paramspost = new ArrayList<NameValuePair>();
     String url = "";
-    int method = 1;
-    final QQRetBean qqRetBean =  new QQRetBean();
+    final QQRetBean qqRetBean = new QQRetBean();
     if (platform == SHARE_MEDIA.QQ) {
       try {
         qqRetBean.setAccess_token(data.get("access_token"));
         qqRetBean.setAppid(Constants.QQ_APPID);
         qqRetBean.setOpenid(data.get("openid"));
         qqRetBean.setExpires_in(data.get("expires_in"));
-
         url = "https://graph.qq.com/user/get_user_info?access_token=" + qqRetBean.getAccess_token() + "&oauth_consumer_key=" + Constants.QQ_APPID + "&openid=" + qqRetBean.getOpenid();
         method = 1;
-        paramspost.add(new BasicNameValuePair("openid", qqRetBean.getOpenid()));
-        paramspost.add(new BasicNameValuePair("access_token", qqRetBean.getAccess_token()));
-        paramspost.add(new BasicNameValuePair("appid", Constants.QQ_APPID));
-        paramspost.add(new BasicNameValuePair("expires_in", qqRetBean.getExpires_in()));
       } catch (Exception e) {
         progressDialog.dismiss();
         showSimpleMessageDialog("授权失败了");
@@ -288,52 +284,68 @@ public class LoginActivity extends BaseActivity {
     } else if (platform == SHARE_MEDIA.SINA) {
 
     } else if (platform == SHARE_MEDIA.WEIXIN) {
-
+      method = 3;
+      qqRetBean.setAccess_token(data.get("access_token"));
+      qqRetBean.setOpenid(data.get("openid"));
+      qqRetBean.setUnionid(data.get("unionid"));
+      url = "https://api.weixin.qq.com/sns/userinfo?access_token="+ qqRetBean.getAccess_token() + "&openid="+qqRetBean.getOpenid();
     }
-    if (method == 1) {
-      networkHandler.get(url, null, 30, new Callback<TransResp>() {
-        @Override
-        public void callback(TransResp transResp) {
-          if (transResp.getRetcode() == HttpStatus.SC_OK) {
-            try {
-              QQUserInfor userInfor = gson.fromJson(transResp.getRetjson(), QQUserInfor.class);
-//              paramspost.add(new BasicNameValuePair("nickname", userInfor.getNickname()));
-//              paramspost.add(new BasicNameValuePair("gender", userInfor.getGender()));
-//              paramspost.add(new BasicNameValuePair("province", userInfor.getProvince()));
-//              paramspost.add(new BasicNameValuePair("city", userInfor.getCity()));
-//              paramspost.add(new BasicNameValuePair("figureurl", userInfor.getFigureurl()));
-//              paramspost.add(new BasicNameValuePair("figureurl_1", userInfor.getFigureurl_1()));
-//              paramspost.add(new BasicNameValuePair("figureurl_2", userInfor.getFigureurl_2()));
-//              paramspost.add(new BasicNameValuePair("figureurl_qq_1", userInfor.getFigureurl_qq_1()));
-//              paramspost.add(new BasicNameValuePair("figureurl_qq_2", userInfor.getFigureurl_qq_2()));
-              userInfor.setAccess_token(qqRetBean.getAccess_token());
-              userInfor.setOpenid(qqRetBean.getOpenid());
-              doSendToServer(userInfor);
-            } catch (Exception e) {
+
+    networkHandler.get(url, null, 30, new Callback<TransResp>() {
+          @Override
+          public void callback(TransResp transResp) {
+            if (transResp.getRetcode() == HttpStatus.SC_OK) {
+              try {
+                QQUserInfor userInfor = gson.fromJson(transResp.getRetjson(), QQUserInfor.class);
+                userInfor.setAccess_token(qqRetBean.getAccess_token());
+                userInfor.setOpenid(qqRetBean.getOpenid());
+                if (method == 1) {
+                  userInfor.setLogintype(Constants.LOGIN_QQ);
+                }else if(method==3){
+                  userInfor.setLogintype(Constants.LOGIN_WECHAT);
+                }else {
+                  userInfor.setLogintype(Constants.LOGIN_SINA);
+                }
+                doSendToServer(userInfor);
+              } catch (Exception e) {
+                progressDialog.dismiss();
+                showSimpleMessageDialog("授权失败了");
+              }
+            } else {
               progressDialog.dismiss();
               showSimpleMessageDialog("授权失败了");
             }
-          } else {
-            progressDialog.dismiss();
-            showSimpleMessageDialog("授权失败了");
           }
         }
-      });
-    }
+    );
   }
 
   private void doSendToServer(final QQUserInfor paramspost) {
     String json = gson.toJson(paramspost);
 
-    networkHandler.postJson("http://m.djtiyu.com/myphone/html/m_LoginPlayerInfo", json, 30, new Callback<TransResp>() {
+    networkHandler.postJson(Constants.LOGIN_AUTH_URL, json, 30, new Callback<TransResp>() {
       @Override
       public void callback(TransResp transResp) {
         if (transResp.getRetcode() == HttpStatus.SC_OK) {
           progressDialog.dismiss();
-          showSimpleMessageDialog(transResp.getRetjson());
+          MsgCodeBean bean = gson.fromJson(transResp.getRetjson(), MsgCodeBean.class);
+          if (bean != null && bean.getStatus().equals("success")) {
+            dbHelper.saveOrUpdateKeyValue(BeanPropEnum.AppProp.openid.toString(), paramspost.getOpenid());
+            dbHelper.saveOrUpdateKeyValue(BeanPropEnum.AppProp.access_token.toString(), paramspost.getAccess_token());
+            dbHelper.saveOrUpdateKeyValue(BeanPropEnum.AppProp.logintype.toString(), paramspost.getLogintype());
+            Message msg = new Message();
+            msg.what = 103;
+            msg.obj = acc;
+            MainActivity.mHandler.sendMessage(msg);
+            LoginActivity.this.finish();
+            return;
+          }else{
+            showSimpleMessageDialog(transResp.getRetjson());
+          }
+          //
         } else {
           progressDialog.dismiss();
-          showSimpleMessageDialog("授权失败了"+transResp.getRetcode());
+          showSimpleMessageDialog("授权失败了" + transResp.getRetcode());
         }
       }
     });

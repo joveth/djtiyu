@@ -16,6 +16,8 @@ public class QQRetBean {
   private String pay_token;
   private String ret;
   private String openid;
+  private String unionid;
+
 
   public String getAccess_token() {
     return access_token;
@@ -111,5 +113,13 @@ public class QQRetBean {
 
   public void setUid(String uid) {
     this.uid = uid;
+  }
+
+  public String getUnionid() {
+    return unionid;
+  }
+
+  public void setUnionid(String unionid) {
+    this.unionid = unionid;
   }
 }

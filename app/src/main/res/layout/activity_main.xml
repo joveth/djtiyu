@@ -4,47 +4,12 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     >
-    <RelativeLayout
-        android:id="@+id/topBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:background="#272636"
-        android:minHeight="60dp"
-        android:padding="10dp"
-        android:visibility="gone"
-        >
-        <TextView android:id="@+id/leftBtn"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:layout_alignParentLeft="true"
-                  android:layout_centerVertical="true"
-                  android:drawableLeft="@mipmap/back"
-            />
-        <TextView android:id="@+id/titleTxt"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:layout_centerInParent="true"
-                  android:layout_centerVertical="true"
-                  android:text="点将体育"
-                  android:textColor="#fff"
-                  android:textSize="20sp"
-            />
-        <TextView android:id="@+id/rightBtn"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:layout_alignParentRight="true"
-                  android:layout_centerVertical="true"
-                  android:layout_marginRight="5dp"
-                  android:drawableLeft="@mipmap/setting"
-            />
-    </RelativeLayout>
+
     <ProgressBar
         android:id="@+id/myProgressBar"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="5px"
-        android:layout_below="@id/topBar"
         android:indeterminateOnly="false"
         android:max="100"
         android:progressDrawable="@drawable/progress_selector"

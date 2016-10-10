@@ -26,6 +26,11 @@ public class QQUserInfor {
   private String appid;
   private String expires_in;
   private String openid;
+  private String logintype;
+  private String sex;
+  private String country;
+  private String headimgurl;
+  private String unionid;
 
 
   public String getCity() {
@@ -202,5 +207,45 @@ public class QQUserInfor {
 
   public void setOpenid(String openid) {
     this.openid = openid;
+  }
+
+  public String getLogintype() {
+    return logintype;
+  }
+
+  public void setLogintype(String logintype) {
+    this.logintype = logintype;
+  }
+
+  public String getSex() {
+    return sex;
+  }
+
+  public void setSex(String sex) {
+    this.sex = sex;
+  }
+
+  public String getCountry() {
+    return country;
+  }
+
+  public void setCountry(String country) {
+    this.country = country;
+  }
+
+  public String getHeadimgurl() {
+    return headimgurl;
+  }
+
+  public void setHeadimgurl(String headimgurl) {
+    this.headimgurl = headimgurl;
+  }
+
+  public String getUnionid() {
+    return unionid;
+  }
+
+  public void setUnionid(String unionid) {
+    this.unionid = unionid;
   }
 }

@@ -36,86 +36,86 @@ import java.util.zip.GZIPInputStream;
 
 public class JsonPostTask extends AsyncTask<String, String, TransResp> {
 
-  private final String url;
-  private int timeout;
-  private final Callback<TransResp> callback;
-  private String paramspost;
+    private final String url;
+    private int timeout;
+    private final Callback<TransResp> callback;
+    private String paramspost;
 
-  JsonPostTask(String url, String paramspost, int timeout, Callback<TransResp> callback) {
-    this.url = url;
-    this.timeout = timeout;
-    this.callback = callback;
-    this.paramspost = paramspost;
-  }
-
-  @Override
-  protected TransResp doInBackground(String... params) {
-    TransResp resp = new TransResp();
-    HttpPost post = new HttpPost(url);
-    HttpResponse httpResponse;
-    try {
-      if (!CommonUtil.isEmpty(paramspost)) {
-        String encoderJson = URLEncoder.encode(paramspost, HTTP.UTF_8);
-        post.addHeader(HTTP.CONTENT_TYPE, "application/json");
-        StringEntity se = new StringEntity(encoderJson);
-        //se.setContentType("text/json");
-        se.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
-        post.setEntity(se);
-      }
-      DefaultHttpClient httpClient = new DefaultHttpClient();
-      httpClient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, timeout);
-      HttpContext context = new BasicHttpContext();
-      CookieStore cookieStore = new BasicCookieStore();
-      context.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
-      httpResponse = httpClient.execute(post, context);
-      if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-        resp.setRetcode(httpResponse.getStatusLine().getStatusCode());
-        HttpEntity obj = httpResponse.getEntity();
-        Header contentEncoding = httpResponse.getFirstHeader("Content-Encoding");
-        String retjson = "";
-        if (contentEncoding != null && contentEncoding.getValue().equalsIgnoreCase("gzip")) {
-          InputStream is = obj.getContent();
-          is = new GZIPInputStream(new BufferedInputStream(is));
-          InputStreamReader reader = new InputStreamReader(is, "utf-8");
-          char[] data = new char[100];
-          int readSize;
-          StringBuffer sb = new StringBuffer();
-          while ((readSize = reader.read(data)) > 0) {
-            sb.append(data, 0, readSize);
-          }
-          retjson = sb.toString();
-          reader.close();
-          is.close();
-        } else {
-          retjson = EntityUtils.toString(obj);
-        }
-        resp.setRetjson(retjson);
-      } else {
-        resp.setRetcode(httpResponse.getStatusLine().getStatusCode());
-        if (httpResponse.getEntity() != null) {
-          String retmsg = EntityUtils.toString(httpResponse.getEntity(), "utf-8");
-          resp.setRetmsg(retmsg);
-        }
-      }
-      List<Cookie> cookies = cookieStore.getCookies();
-      Log.e("cookies", "cookies" + cookies.size());
-      if (!cookies.isEmpty()) {
-        for (int i = cookies.size(); i > 0; i--) {
-          Cookie cookie = cookies.get(i - 1);
-          if (cookie.getName().equalsIgnoreCase("jsessionid") && !CommonUtil.isEmpty(cookie.getValue())) {
-            Constants.LOGINCOOKIE = cookie;
-          }
-        }
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
+    JsonPostTask(String url, String paramspost, int timeout, Callback<TransResp> callback) {
+        this.url = url;
+        this.timeout = timeout;
+        this.callback = callback;
+        this.paramspost = paramspost;
     }
-    return resp;
-  }
 
-  @Override
-  protected void onPostExecute(TransResp result) {
-    callback.callback(result);
-    super.onPostExecute(result);
-  }
+    @Override
+    protected TransResp doInBackground(String... params) {
+        TransResp resp = new TransResp();
+        HttpPost post = new HttpPost(url);
+        HttpResponse httpResponse;
+        try {
+            post.setHeader("Content-type", "application/json");
+            if (!CommonUtil.isEmpty(paramspost)) {
+                String encoderJson = URLEncoder.encode(paramspost, HTTP.UTF_8);
+                StringEntity se = new StringEntity(paramspost,HTTP.UTF_8);
+                //se.setContentType("text/json");
+                //se.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+                post.setEntity(se);
+            }
+            DefaultHttpClient httpClient = new DefaultHttpClient();
+            httpClient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, timeout*1000);
+            HttpContext context = new BasicHttpContext();
+            CookieStore cookieStore = new BasicCookieStore();
+            context.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
+            httpResponse = httpClient.execute(post, context);
+            if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                resp.setRetcode(httpResponse.getStatusLine().getStatusCode());
+                HttpEntity obj = httpResponse.getEntity();
+                Header contentEncoding = httpResponse.getFirstHeader("Content-Encoding");
+                String retjson = "";
+                if (contentEncoding != null && contentEncoding.getValue().equalsIgnoreCase("gzip")) {
+                    InputStream is = obj.getContent();
+                    is = new GZIPInputStream(new BufferedInputStream(is));
+                    InputStreamReader reader = new InputStreamReader(is, "utf-8");
+                    char[] data = new char[100];
+                    int readSize;
+                    StringBuffer sb = new StringBuffer();
+                    while ((readSize = reader.read(data)) > 0) {
+                        sb.append(data, 0, readSize);
+                    }
+                    retjson = sb.toString();
+                    reader.close();
+                    is.close();
+                } else {
+                    retjson = EntityUtils.toString(obj);
+                }
+                resp.setRetjson(retjson);
+            } else {
+                resp.setRetcode(httpResponse.getStatusLine().getStatusCode());
+                if (httpResponse.getEntity() != null) {
+                    String retmsg = EntityUtils.toString(httpResponse.getEntity(), "utf-8");
+                    resp.setRetmsg(retmsg);
+                }
+            }
+            List<Cookie> cookies = cookieStore.getCookies();
+            Log.e("cookies", "cookies" + cookies.size());
+            if (!cookies.isEmpty()) {
+                for (int i = cookies.size(); i > 0; i--) {
+                    Cookie cookie = cookies.get(i - 1);
+                    if (cookie.getName().equalsIgnoreCase("jsessionid") && !CommonUtil.isEmpty(cookie.getValue())) {
+                        Constants.LOGINCOOKIE = cookie;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return resp;
+    }
+
+    @Override
+    protected void onPostExecute(TransResp result) {
+        callback.callback(result);
+        super.onPostExecute(result);
+    }
 }

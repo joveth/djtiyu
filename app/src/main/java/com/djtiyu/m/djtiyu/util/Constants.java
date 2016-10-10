@@ -21,16 +21,21 @@ public class Constants {
 
   public static final String LOGIN_URL = "http://m.djtiyu.com/myphone/html/m_checkLogin";
 
+  public static final String LOGIN_AUTH_URL = "http://m.djtiyu.com/myphone/html/m_LoginPlayerInfo";
+
   public static Cookie LOGINCOOKIE;
 
   public static final String QQ_APPID="100424468";
   public static final String QQ_APPKEY="c7394704798a158208a74ab60104f0ba";
 
 
-  public static final String WECHAT_APPID="wx1456b79a89aa2037";
-  public static final String WECHAT_APPKEY="ac0cb8672ccd67159dd7b46ac85f02ac";
+  public static final String WECHAT_APPID="wxfc73013f6c54c355";
+  public static final String WECHAT_APPKEY="fce3952a7bba9986a14275906178334c";
 
   public static final String SINA_APPID="3375114410";
   public static final String SINA_APPKEY="2632b93d69672ca8921bb11aed215856";
 
+  public  static final String LOGIN_QQ="qq";
+  public  static final String LOGIN_WECHAT="wechat";
+  public  static final String LOGIN_SINA="sina";
 }

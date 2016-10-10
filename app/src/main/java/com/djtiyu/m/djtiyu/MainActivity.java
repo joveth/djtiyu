@@ -53,11 +53,10 @@ import cn.jpush.android.api.TagAliasCallback;
 public class MainActivity extends BaseActivity implements ActionSheet.ActionSheetListener {
 
   public static final String APP_CACAHE_DIRNAME = "/webcache";
-  private View vLeftBtn, vRightBtn, vNoNetWork, vRetryBtn,vTopBar;
-  private TextView vTitleTxt;
+  private View vNoNetWork, vRetryBtn;
   private WebView webView;
   private ProgressBar bar;
-  private boolean hasLoaded = false, loginedOnce, logined, needBackHome;
+  private boolean hasLoaded = false, loginedOnce, logined, needBackHome,checkedUpdate;
   private ValueCallback<Uri> mUploadMessage;
   private ValueCallback<Uri[]> mUploadMessageForAndroid5;
   private ActionSheet.Builder actionSheet;
@@ -69,14 +68,14 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
   private String lastUrl, acc, pwd;
   private File tempFile;
   private Uri uri;
-
+  private UpdateManagerService updateManagerService;
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
     initView();
-    UpdateManagerService updateManagerService = new UpdateManagerService(this);
-    updateManagerService.checkVersion();
+    updateManagerService = new UpdateManagerService(this);
+
     initOther();
     JPushInterface.setDebugMode(true);
     JPushInterface.init(this);
@@ -84,12 +83,6 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
   }
 
   private void initView() {
-    vTopBar = findViewById(R.id.topBar);
-    vLeftBtn = findViewById(R.id.leftBtn);
-    vLeftBtn.setOnClickListener(this);
-    vTitleTxt = (TextView) findViewById(R.id.titleTxt);
-    vRightBtn = findViewById(R.id.rightBtn);
-    vRightBtn.setOnClickListener(this);
 
     vNoNetWork = findViewById(R.id.no_network_view);
     vRetryBtn = findViewById(R.id.network_retry_btn);
@@ -118,17 +111,24 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
     webView.setWebViewClient(new WebViewClient() {
       @Override
       public boolean shouldOverrideUrlLoading(WebView view, String url) {
+        //非url
+        if (!url.contains("djtiyu.com")) {
+          webView.loadUrl(Constants.HOME_URL);
+          return true;
+        }
+        if (url.contains("m_member_close")) {
+          clearWebViewCache();
+          webView.loadUrl(url);
+          return true;
+        }
         if (url.contains("m_login")) {
           logined = false;
           doAutoLogin();
           return true;
         }
         lastUrl = url;
-        if (!url.contains("m_enter")) {
-          if (vTopBar.getVisibility() == View.GONE) {
-            vTopBar.setVisibility(View.VISIBLE);
-          }
-        } else {
+
+        if (url.contains("m_enter")) {
           lastUrl = null;
         }
         webView.loadUrl(url);
@@ -137,14 +137,20 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
 
       @Override
       public void onPageStarted(WebView view, String url, Bitmap favicon) {
-        if (!url.contains("m_enter")) {
-          if (vTopBar.getVisibility() == View.GONE) {
-            vTopBar.setVisibility(View.VISIBLE);
+        if (!url.contains("djtiyu.com")) {
+          webView.loadUrl(Constants.HOME_URL);
+          return;
+        }
+        if ( url.contains("m_hall") || url.contains("circle-homepage")
+            || url.contains("m_rankhome") || url.contains("m_shopping")
+            || url.contains("m_show-competition")) {
+          if(!checkedUpdate){
+            updateManagerService.checkVersion();
+            checkedUpdate = true;
           }
         }
         if (url.contains("m_enter") && !hasLoaded) {
           webView.clearHistory();
-          vLeftBtn.setVisibility(View.GONE);
           return;
         }
         if (url.contains("m_enter")) {
@@ -160,16 +166,8 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
         if (url.contains("m_enter") || url.contains("m_hall") || url.contains("circle-homepage")
             || url.contains("m_rankhome") || url.contains("m_shopping")
             || url.contains("m_show-competition")) {
-          vLeftBtn.setVisibility(View.GONE);
           webView.clearHistory();
-        } else {
-          if (webView.canGoBack()) {
-            vLeftBtn.setVisibility(View.VISIBLE);
-          } else {
-            vLeftBtn.setVisibility(View.GONE);
-          }
         }
-        vTitleTxt.setText(view.getTitle());
         super.onPageFinished(view, url);
       }
 
@@ -202,7 +200,6 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
       @Override
       public void onReceivedTitle(WebView view, String title) {
         super.onReceivedTitle(view, title);
-        vTitleTxt.setText(title);
       }
 
       @Override
@@ -243,14 +240,7 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
   }
 
   private void doAutoLogin() {
-    acc = dbHelper.getValue(BeanPropEnum.AppProp.acc.toString());
-    pwd = dbHelper.getValue(BeanPropEnum.AppProp.pwd.toString());
-    if (!CommonUtil.isEmpty(acc) && !CommonUtil.isEmpty(pwd) && !loginedOnce) {
-      //doLogin();
-      switchTo(LoginActivity.class);
-    } else {
-      switchTo(LoginActivity.class);
-    }
+    switchTo(LoginActivity.class);
   }
 
   private void doLogin() {
@@ -312,8 +302,6 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
       if (webView.canGoBack()) {
         webView.goBack();
         return true;
-      } else {
-        vLeftBtn.setVisibility(View.GONE);
       }
       backTo();
       return true;
@@ -461,10 +449,7 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
       @Override
       public void handleMessage(Message msg) {
         if (msg.what == 100) {
-          if (webView != null) {
-            webView.clearCache(true);
-            webView.clearFormData();
-          }
+          clearWebViewCache();
         } else if (msg.what == 101) {
           //注册
           webView.loadUrl(Constants.REG_URL);
@@ -487,12 +472,12 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
           } else {
             webView.loadUrl(lastUrl);
           }
-        }else if(msg.what==105){
+        } else if (msg.what == 105) {
           webView.loadUrl(Constants.HOME_URL);
-        }else if(msg.what==106){
-          if(CommonUtil.isEmpty(lastUrl)) {
+        } else if (msg.what == 106) {
+          if (CommonUtil.isEmpty(lastUrl)) {
             webView.loadUrl(Constants.HOME_URL);
-          }else {
+          } else {
             webView.loadUrl(lastUrl);
           }
         }
@@ -501,16 +486,30 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
     };
   }
 
+  public void clearWebViewCache() {
+    if (webView != null) {
+      webView.clearCache(true);
+      webView.clearFormData();
+    }
+    // 清除cookie即可彻底清除缓存
+    CookieSyncManager.createInstance(this);
+    CookieManager.getInstance().removeAllCookie();
+    Constants.LOGINCOOKIE = null;
+    dbHelper.saveOrUpdateKeyValue(BeanPropEnum.AppProp.pwd.toString(), "");
+  }
+
   private void loadMain() {
-    CookieSyncManager.createInstance(MainActivity.this);
-    CookieManager cookieManager = CookieManager.getInstance();
-    Cookie sessionCookie = Constants.LOGINCOOKIE;
-    if (sessionCookie != null) {
-      String cookieString = sessionCookie.getName() + "="
-          + sessionCookie.getValue() + "; domain="
-          + sessionCookie.getDomain();
-      cookieManager.setCookie(Constants.HOME_URL, cookieString);
-      CookieSyncManager.getInstance().sync();
+    if (Constants.LOGINCOOKIE != null) {
+      CookieSyncManager.createInstance(MainActivity.this);
+      CookieManager cookieManager = CookieManager.getInstance();
+      Cookie sessionCookie = Constants.LOGINCOOKIE;
+      if (sessionCookie != null) {
+        String cookieString = sessionCookie.getName() + "="
+            + sessionCookie.getValue() + "; domain="
+            + sessionCookie.getDomain();
+        cookieManager.setCookie(Constants.HOME_URL, cookieString);
+        CookieSyncManager.getInstance().sync();
+      }
     }
     if (!CommonUtil.isEmpty(lastUrl)) {
       webView.loadUrl(lastUrl);
@@ -521,15 +520,7 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
 
   @Override
   public void onClick(View v) {
-    if (v == vLeftBtn) {
-      if (webView.canGoBack()) {
-        webView.goBack();
-      } else {
-        vLeftBtn.setVisibility(View.GONE);
-      }
-    } else if (v == vRightBtn) {
-      switchTo(SettingActivity.class);
-    } else if (v == vRetryBtn) {
+    if (v == vRetryBtn) {
       webView.loadUrl(lastUrl);
       webView.setVisibility(View.VISIBLE);
       vNoNetWork.setVisibility(View.GONE);

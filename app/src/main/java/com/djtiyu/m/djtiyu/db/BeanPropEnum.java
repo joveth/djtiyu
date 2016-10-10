@@ -9,7 +9,7 @@ public class BeanPropEnum {
 	}
 
 	public enum AppProp {
-		acc,pwd
+		acc,pwd,openid,access_token,logintype
 	}
 
 }
