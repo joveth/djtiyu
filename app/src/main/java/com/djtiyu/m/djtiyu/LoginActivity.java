@@ -1,8 +1,10 @@
 package com.djtiyu.m.djtiyu;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -19,6 +21,7 @@ import com.djtiyu.m.djtiyu.util.Constants;
 import com.djtiyu.m.djtiyu.util.CustomProgressDialog;
 import com.djtiyu.m.djtiyu.util.TransResp;
 import com.google.gson.Gson;
+import com.umeng.socialize.Config;
 import com.umeng.socialize.PlatformConfig;
 import com.umeng.socialize.UMAuthListener;
 import com.umeng.socialize.UMShareAPI;
@@ -49,6 +52,14 @@ public class LoginActivity extends BaseActivity {
     setContentView(R.layout.activity_login);
     setPlatform();
     initView();
+    authPer();
+  }
+
+  private void authPer() {
+    if (Build.VERSION.SDK_INT >= 23) {
+      String[] mPermissionList = new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.CALL_PHONE, android.Manifest.permission.READ_LOGS, android.Manifest.permission.READ_PHONE_STATE, android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.SET_DEBUG_APP, android.Manifest.permission.SYSTEM_ALERT_WINDOW, android.Manifest.permission.GET_ACCOUNTS, android.Manifest.permission.WRITE_APN_SETTINGS};
+      //TODO
+    }
   }
 
   private void setPlatform() {
@@ -59,6 +70,7 @@ public class LoginActivity extends BaseActivity {
     // qq qzone appid appkey
     PlatformConfig.setQQZone(Constants.QQ_APPID, Constants.QQ_APPKEY);
     mShareAPI = UMShareAPI.get(this);
+    Config.REDIRECT_URL="http://sns.whalecloud.com/sina2/callback";
   }
 
   private void initView() {
@@ -259,7 +271,9 @@ public class LoginActivity extends BaseActivity {
     super.onActivityResult(requestCode, resultCode, data);
     mShareAPI.onActivityResult(requestCode, resultCode, data);
   }
+
   private int method;
+
   private void getUserInfor(SHARE_MEDIA platform, Map<String, String> data) {
     if (progressDialog == null) {
       progressDialog = new CustomProgressDialog(this, "正在授权...", false);
@@ -269,26 +283,24 @@ public class LoginActivity extends BaseActivity {
     String url = "";
     final QQRetBean qqRetBean = new QQRetBean();
     if (platform == SHARE_MEDIA.QQ) {
-      try {
         qqRetBean.setAccess_token(data.get("access_token"));
         qqRetBean.setAppid(Constants.QQ_APPID);
         qqRetBean.setOpenid(data.get("openid"));
         qqRetBean.setExpires_in(data.get("expires_in"));
         url = "https://graph.qq.com/user/get_user_info?access_token=" + qqRetBean.getAccess_token() + "&oauth_consumer_key=" + Constants.QQ_APPID + "&openid=" + qqRetBean.getOpenid();
         method = 1;
-      } catch (Exception e) {
-        progressDialog.dismiss();
-        showSimpleMessageDialog("授权失败了");
-        return;
-      }
     } else if (platform == SHARE_MEDIA.SINA) {
-
+      qqRetBean.setAccess_token(data.get("access_key"));
+      qqRetBean.setAppid(Constants.SINA_APPID);
+      qqRetBean.setUid(data.get("uid"));
+      method = 2;
+      url="https://api.weibo.com/2/users/show.json?access_token="+qqRetBean.getAccess_token()+"&uid="+qqRetBean.getUid();
     } else if (platform == SHARE_MEDIA.WEIXIN) {
       method = 3;
       qqRetBean.setAccess_token(data.get("access_token"));
       qqRetBean.setOpenid(data.get("openid"));
       qqRetBean.setUnionid(data.get("unionid"));
-      url = "https://api.weixin.qq.com/sns/userinfo?access_token="+ qqRetBean.getAccess_token() + "&openid="+qqRetBean.getOpenid();
+      url = "https://api.weixin.qq.com/sns/userinfo?access_token=" + qqRetBean.getAccess_token() + "&openid=" + qqRetBean.getOpenid();
     }
 
     networkHandler.get(url, null, 30, new Callback<TransResp>() {
@@ -301,9 +313,10 @@ public class LoginActivity extends BaseActivity {
                 userInfor.setOpenid(qqRetBean.getOpenid());
                 if (method == 1) {
                   userInfor.setLogintype(Constants.LOGIN_QQ);
-                }else if(method==3){
+                } else if (method == 3) {
                   userInfor.setLogintype(Constants.LOGIN_WECHAT);
-                }else {
+                } else {
+                  userInfor.setOpenid(qqRetBean.getUid());
                   userInfor.setLogintype(Constants.LOGIN_SINA);
                 }
                 doSendToServer(userInfor);
@@ -339,7 +352,7 @@ public class LoginActivity extends BaseActivity {
             MainActivity.mHandler.sendMessage(msg);
             LoginActivity.this.finish();
             return;
-          }else{
+          } else {
             showSimpleMessageDialog(transResp.getRetjson());
           }
           //

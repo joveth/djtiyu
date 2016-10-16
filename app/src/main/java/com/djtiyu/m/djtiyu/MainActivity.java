@@ -56,7 +56,7 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
   private View vNoNetWork, vRetryBtn;
   private WebView webView;
   private ProgressBar bar;
-  private boolean hasLoaded = false, loginedOnce, logined, needBackHome,checkedUpdate;
+  private boolean hasLoaded = false, loginedOnce, logined, needBackHome,checkedUpdate,isRegister,isPwdForget;
   private ValueCallback<Uri> mUploadMessage;
   private ValueCallback<Uri[]> mUploadMessageForAndroid5;
   private ActionSheet.Builder actionSheet;
@@ -299,6 +299,16 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
         needBackHome = false;
         return true;
       }
+      if(isRegister){
+        switchTo(LoginActivity.class);
+        isRegister = false;
+        return true;
+      }
+      if(isPwdForget){
+        switchTo(LoginActivity.class);
+        isPwdForget = false;
+        return true;
+      }
       if (webView.canGoBack()) {
         webView.goBack();
         return true;
@@ -448,13 +458,17 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
     mHandler = new Handler() {
       @Override
       public void handleMessage(Message msg) {
+        isRegister = false;
+        isPwdForget = false;
         if (msg.what == 100) {
           clearWebViewCache();
         } else if (msg.what == 101) {
           //注册
+          isRegister = true;
           webView.loadUrl(Constants.REG_URL);
         } else if (msg.what == 102) {
           //忘记密码
+          isPwdForget = true;
           webView.loadUrl(Constants.PWD_URL);
         } else if (msg.what == 103) {
           //大厅

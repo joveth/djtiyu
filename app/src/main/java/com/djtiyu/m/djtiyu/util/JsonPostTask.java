@@ -16,6 +16,7 @@ import org.apache.http.client.CookieStore;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
@@ -28,11 +29,24 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
 
 public class JsonPostTask extends AsyncTask<String, String, TransResp> {
 
@@ -50,7 +64,7 @@ public class JsonPostTask extends AsyncTask<String, String, TransResp> {
 
     @Override
     protected TransResp doInBackground(String... params) {
-        TransResp resp = new TransResp();
+        /*TransResp resp = new TransResp();
         HttpPost post = new HttpPost(url);
         HttpResponse httpResponse;
         try {
@@ -110,7 +124,85 @@ public class JsonPostTask extends AsyncTask<String, String, TransResp> {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return resp;*/
+      URL urlReq;
+      TransResp resp = new TransResp();
+      HttpURLConnection uRLConnection=null;
+      try {
+        urlReq = new URL(url);
+        if(url.startsWith("https")){
+          SSLContext context = SSLContext.getInstance("TLS");
+          context.init(null, new TrustManager[] { new TrustAllManager() }, null);
+          HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory());
+          HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+            @Override
+            public boolean verify(String arg0, SSLSession arg1) {
+              return true;
+            }
+          });
+          uRLConnection = (HttpsURLConnection) urlReq.openConnection();
+        }else{
+          uRLConnection = (HttpURLConnection) urlReq.openConnection();
+        }
+        uRLConnection.setDoInput(true);
+        uRLConnection.setDoOutput(true);
+        uRLConnection.setRequestMethod("POST");
+        uRLConnection.setUseCaches(false);
+        uRLConnection.setRequestProperty("Connection", "Keep-Alive");
+        uRLConnection.setConnectTimeout(this.timeout * 1000);
+        uRLConnection.setInstanceFollowRedirects(false);
+        uRLConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        uRLConnection.setReadTimeout(this.timeout * 1000);
+        uRLConnection.setDoOutput(false);
+        uRLConnection.connect();
+        if (!CommonUtil.isEmpty(paramspost)) {
+          DataOutputStream out = new DataOutputStream(uRLConnection.getOutputStream());
+          out.writeBytes( URLEncoder.encode(paramspost,"utf-8"));
+          out.flush();
+          out.close();
+        }
+        InputStream is = uRLConnection.getInputStream();
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        String response = "";
+        String readLine = "";
+        while ((readLine = br.readLine()) != null) {
+          //response = br.readLine();
+          response = response + readLine;
+        }
+        is.close();
+        br.close();
+        resp.setRetcode(uRLConnection.getResponseCode());
+        if(uRLConnection.getResponseCode()==200){
+          resp.setRetjson(response);
+          Map headers = uRLConnection.getHeaderFields();
+
+        }else{
+          resp.setRetmsg(response);
+        }
         return resp;
+      }catch (ConnectTimeoutException e){
+        resp.setRetcode(0);
+        resp.setRetmsg("请求超时");
+        return resp;
+      }catch (MalformedURLException e) {
+        resp.setRetcode(402);
+        resp.setRetmsg("请求出现错误");
+        return resp;
+      } catch (IOException e) {
+        e.printStackTrace();
+        resp.setRetcode(402);
+        resp.setRetmsg("请求出现错误");
+        return resp;
+      }catch (Exception e){
+        e.printStackTrace();
+        resp.setRetcode(402);
+        resp.setRetmsg("请求出现错误");
+        return resp;
+      }finally {
+        if(uRLConnection!=null){
+          uRLConnection.disconnect();
+        }
+      }
     }
 
     @Override

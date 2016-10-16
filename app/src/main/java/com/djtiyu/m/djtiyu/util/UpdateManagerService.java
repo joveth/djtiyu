@@ -149,7 +149,14 @@ public class UpdateManagerService {
 					intent.setDataAndType(uri, "application/vnd.android.package-archive");
 					pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
 					notification.tickerText = context.getString(R.string.app_name) + "下载完成，点击安装";
-					notification.setLatestEventInfo(context, context.getString(R.string.app_name), "下载完成，点击安装", pendingIntent);
+          notification = new Notification.Builder(context)
+              .setAutoCancel(true)
+              .setContentTitle(context.getString(R.string.app_name))
+              .setContentText("下载完成，点击安装")
+              .setContentIntent(pendingIntent)
+              .setSmallIcon(R.mipmap.ic_launcher)
+              .setWhen(System.currentTimeMillis())
+              .build();
 					notificationManager.notify(notification_id, notification);
 					context.startActivity(intent);
 					// 如果不加上这句的话在apk安装完成之后点击单开会崩溃
@@ -157,7 +164,14 @@ public class UpdateManagerService {
 					break;
 				}
 			case DOWN_ERROR:
-				notification.setLatestEventInfo(context, context.getString(R.string.app_name), "下载失败", pendingIntent);
+        notification = new Notification.Builder(context)
+            .setAutoCancel(true)
+            .setContentTitle(context.getString(R.string.app_name))
+            .setContentText("下载失败")
+            .setContentIntent(pendingIntent)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setWhen(System.currentTimeMillis())
+            .build();
 				break;
 			default:
 				break;

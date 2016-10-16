@@ -31,7 +31,21 @@ public class QQUserInfor {
   private String country;
   private String headimgurl;
   private String unionid;
-
+  private String id;
+  private String screen_name;
+  private String name;
+  private String location;
+  private String description;
+  private String url;
+  private String profile_image_url;
+  private String profile_url;
+  private String followers_count;
+  private String friends_count;
+  private String pagefriends_count;
+  private String favourites_count;
+  private String avatar_hd;
+  private String avatar_large;
+  private String online_status;
 
   public String getCity() {
     return city;
@@ -247,5 +261,125 @@ public class QQUserInfor {
 
   public void setUnionid(String unionid) {
     this.unionid = unionid;
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  public String getScreen_name() {
+    return screen_name;
+  }
+
+  public void setScreen_name(String screen_name) {
+    this.screen_name = screen_name;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getLocation() {
+    return location;
+  }
+
+  public void setLocation(String location) {
+    this.location = location;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
+  public String getUrl() {
+    return url;
+  }
+
+  public void setUrl(String url) {
+    this.url = url;
+  }
+
+  public String getProfile_image_url() {
+    return profile_image_url;
+  }
+
+  public void setProfile_image_url(String profile_image_url) {
+    this.profile_image_url = profile_image_url;
+  }
+
+  public String getProfile_url() {
+    return profile_url;
+  }
+
+  public void setProfile_url(String profile_url) {
+    this.profile_url = profile_url;
+  }
+
+  public String getFollowers_count() {
+    return followers_count;
+  }
+
+  public void setFollowers_count(String followers_count) {
+    this.followers_count = followers_count;
+  }
+
+  public String getFriends_count() {
+    return friends_count;
+  }
+
+  public void setFriends_count(String friends_count) {
+    this.friends_count = friends_count;
+  }
+
+  public String getPagefriends_count() {
+    return pagefriends_count;
+  }
+
+  public void setPagefriends_count(String pagefriends_count) {
+    this.pagefriends_count = pagefriends_count;
+  }
+
+  public String getFavourites_count() {
+    return favourites_count;
+  }
+
+  public void setFavourites_count(String favourites_count) {
+    this.favourites_count = favourites_count;
+  }
+
+  public String getAvatar_hd() {
+    return avatar_hd;
+  }
+
+  public void setAvatar_hd(String avatar_hd) {
+    this.avatar_hd = avatar_hd;
+  }
+
+  public String getAvatar_large() {
+    return avatar_large;
+  }
+
+  public void setAvatar_large(String avatar_large) {
+    this.avatar_large = avatar_large;
+  }
+
+  public String getOnline_status() {
+    return online_status;
+  }
+
+  public void setOnline_status(String online_status) {
+    this.online_status = online_status;
   }
 }

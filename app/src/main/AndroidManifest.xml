@@ -144,26 +144,7 @@
             </intent-filter>
         </receiver>
         <!-- 友盟 -->
-        <!-- sina -->
-        <activity
-            android:name=".WBShareActivity"
-            android:configChanges="keyboardHidden|orientation"
-            android:screenOrientation="portrait" >
-            <intent-filter>
-                <action android:name="com.sina.weibo.sdk.action.ACTION_SDK_REQ_ACTIVITY" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name="com.sina.weibo.sdk.component.WeiboSdkBrowser"
-            android:configChanges="keyboardHidden|orientation"
-            android:windowSoftInputMode="adjustResize"
-            android:exported="false" >
-        </activity>
-        <service
-            android:name="com.sina.weibo.sdk.net.DownloadService"
-            android:exported="false">
-        </service>
+
         <!-- wechat callback-->
         <activity
             android:name=".wxapi.WXEntryActivity"
@@ -182,7 +163,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="tencent100424468" />
+                <data android:scheme="tencent1105749996" />
             </intent-filter>
         </activity>
         <activity

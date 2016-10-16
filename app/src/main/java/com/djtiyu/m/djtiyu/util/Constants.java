@@ -24,10 +24,8 @@ public class Constants {
   public static final String LOGIN_AUTH_URL = "http://m.djtiyu.com/myphone/html/m_LoginPlayerInfo";
 
   public static Cookie LOGINCOOKIE;
-
-  public static final String QQ_APPID="100424468";
-  public static final String QQ_APPKEY="c7394704798a158208a74ab60104f0ba";
-
+  public static final String QQ_APPID="1105749996";
+  public static final String QQ_APPKEY="0cPspOY6S7QU0Mx6";
 
   public static final String WECHAT_APPID="wxfc73013f6c54c355";
   public static final String WECHAT_APPKEY="fce3952a7bba9986a14275906178334c";
