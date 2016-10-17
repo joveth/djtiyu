@@ -5,29 +5,11 @@ package com.djtiyu.m.djtiyu.util;
  */
 
 import android.os.AsyncTask;
-import android.util.Log;
 
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.protocol.ClientContext;
+import com.djtiyu.m.djtiyu.db.NameValuePair;
+
 import org.apache.http.conn.ConnectTimeoutException;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.CoreConnectionPNames;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.util.EntityUtils;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -38,7 +20,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -146,9 +127,8 @@ public class PostTask extends AsyncTask<String, String, TransResp> {
       uRLConnection.setRequestProperty("Connection", "Keep-Alive");
       uRLConnection.setConnectTimeout(this.timeout * 1000);
       uRLConnection.setInstanceFollowRedirects(false);
-      uRLConnection.setRequestProperty("Content-Type",  "application/x-www-form-urlencoded");
+      uRLConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
       uRLConnection.setReadTimeout(this.timeout * 1000);
-      uRLConnection.setDoOutput(false);
       uRLConnection.connect();
       if (paramspost != null) {
         String prestr = "";
@@ -156,6 +136,9 @@ public class PostTask extends AsyncTask<String, String, TransResp> {
           NameValuePair nameValuePair = paramspost.get(i);
           String value = nameValuePair.getValue();
           String key = nameValuePair.getName();
+          if(!CommonUtil.isEmpty(value)&&!"null".equals(value)){
+            value = URLEncoder.encode(value,"utf-8");
+          }
           if (i == paramspost.size() - 1) {
             prestr = prestr + key + "=" +  URLEncoder.encode(value,"utf-8");
           } else {
@@ -180,6 +163,19 @@ public class PostTask extends AsyncTask<String, String, TransResp> {
       resp.setRetcode(uRLConnection.getResponseCode());
       if(uRLConnection.getResponseCode()==200){
         resp.setRetjson(response);
+        List<String> cookies = uRLConnection.getHeaderFields().get("Set-Cookie");
+        if(cookies!=null){
+          for(String coo:cookies){
+            if(!CommonUtil.isEmpty(coo)&&coo.contains("SESSIONID")){
+              String[] sp = coo.split(";");
+              for(String s:sp){
+                if(!CommonUtil.isEmpty(s)&&s.contains("SESSIONID")){
+                  Constants.COOKIESTR = s;
+                }
+              }
+            }
+          }
+        }
       }else{
         resp.setRetmsg(response);
       }

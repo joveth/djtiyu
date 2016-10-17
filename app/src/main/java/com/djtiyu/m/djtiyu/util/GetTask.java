@@ -2,24 +2,16 @@ package com.djtiyu.m.djtiyu.util;
 
 import android.os.AsyncTask;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.params.HttpParams;
-import org.apache.http.util.EntityUtils;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -101,17 +93,15 @@ public class GetTask extends AsyncTask<String, Long, TransResp> {
           uRLConnection = (HttpURLConnection) urlReq.openConnection();
         }
         uRLConnection.setDoInput(true);
-        uRLConnection.setDoOutput(true);
         uRLConnection.setRequestMethod("GET");
         uRLConnection.setUseCaches(false);
         uRLConnection.setRequestProperty("Connection", "Keep-Alive");
         uRLConnection.setConnectTimeout(this.timeout * 1000);
         uRLConnection.setInstanceFollowRedirects(false);
-        uRLConnection.setRequestProperty("Content-Type",  "application/x-www-form-urlencoded");
+        uRLConnection.setRequestProperty("Content-Type", "application/json");
+        uRLConnection.setRequestProperty("Accept", "application/json");
         uRLConnection.setReadTimeout(this.timeout * 1000);
-        uRLConnection.setDoOutput(false);
         uRLConnection.connect();
-
         InputStream is = uRLConnection.getInputStream();
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
         String response = "";

@@ -20,8 +20,6 @@ import com.djtiyu.m.djtiyu.util.UpdateBean;
 import com.djtiyu.m.djtiyu.util.UpdateManagerService;
 import com.google.gson.Gson;
 
-import org.apache.http.HttpStatus;
-
 import java.io.File;
 
 /**
@@ -165,7 +163,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
       @Override
       public void callback(TransResp transResp) {
 
-        if (transResp.getRetcode() == HttpStatus.SC_OK) {
+        if (transResp.getRetcode() == 200) {
           String ret = transResp.getRetjson();
           if (CommonUtil.isEmpty(ret)) {
             progressDialog.dismiss();

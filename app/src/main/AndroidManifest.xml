@@ -144,7 +144,11 @@
             </intent-filter>
         </receiver>
         <!-- 友盟 -->
-
+        <activity
+            android:name="com.umeng.socialize.editorpage.ShareActivity"
+            android:theme="@style/Theme.UMDefault"
+            android:excludeFromRecents="true"
+            />
         <!-- wechat callback-->
         <activity
             android:name=".wxapi.WXEntryActivity"

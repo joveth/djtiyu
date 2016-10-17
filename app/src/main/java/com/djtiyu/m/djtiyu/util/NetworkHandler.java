@@ -1,6 +1,7 @@
 package com.djtiyu.m.djtiyu.util;
 
-import org.apache.http.NameValuePair;
+import com.djtiyu.m.djtiyu.db.NameValuePair;
+
 import org.apache.http.params.HttpParams;
 
 import java.util.List;

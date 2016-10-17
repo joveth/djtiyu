@@ -1,7 +1,10 @@
 package com.djtiyu.m.djtiyu;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -9,13 +12,19 @@ import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.ActivityCompat;
+import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import android.webkit.JsResult;
@@ -25,26 +34,21 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.baoyz.actionsheet.ActionSheet;
 import com.djtiyu.m.djtiyu.db.BeanPropEnum;
-import com.djtiyu.m.djtiyu.util.Callback;
 import com.djtiyu.m.djtiyu.util.CommonUtil;
 import com.djtiyu.m.djtiyu.util.Constants;
-import com.djtiyu.m.djtiyu.util.CustomProgressDialog;
 import com.djtiyu.m.djtiyu.util.FileUtil;
-import com.djtiyu.m.djtiyu.util.TransResp;
 import com.djtiyu.m.djtiyu.util.UpdateManagerService;
-
-import org.apache.http.NameValuePair;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.message.BasicNameValuePair;
+import com.umeng.socialize.ShareAction;
+import com.umeng.socialize.UMShareAPI;
+import com.umeng.socialize.UMShareListener;
+import com.umeng.socialize.bean.SHARE_MEDIA;
+import com.umeng.socialize.media.UMImage;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 import cn.jpush.android.api.JPushInterface;
@@ -56,32 +60,38 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
   private View vNoNetWork, vRetryBtn;
   private WebView webView;
   private ProgressBar bar;
-  private boolean hasLoaded = false, loginedOnce, logined, needBackHome,checkedUpdate,isRegister,isPwdForget;
+  private boolean hasLoaded = false, loginedOnce, logined, needBackHome, checkedUpdate, isRegister, isPwdForget;
   private ValueCallback<Uri> mUploadMessage;
   private ValueCallback<Uri[]> mUploadMessageForAndroid5;
   private ActionSheet.Builder actionSheet;
   private ActionSheet actionSheet1;
   private boolean isShowing;
-  private static final int CAMERA_REQUEST_CODE = 1;
-  private static final int RESULT_REQUEST_CODE = 2;
-  private static final int PHOTO_REQUEST_CODE = 3;
-  private String lastUrl, acc, pwd;
+  private static final int CAMERA_REQUEST_CODE = 101;
+  private static final int RESULT_REQUEST_CODE = 202;
+  private static final int PHOTO_REQUEST_CODE = 303;
+  private String lastUrl, acc, pwd, shareContent;
   private File tempFile;
   private Uri uri;
   private UpdateManagerService updateManagerService;
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
     initView();
     updateManagerService = new UpdateManagerService(this);
-
+    authPer();
     initOther();
     JPushInterface.setDebugMode(true);
     JPushInterface.init(this);
     registerMessageReceiver();
   }
-
+  private void authPer() {
+    if (Build.VERSION.SDK_INT >= 23) {
+      String[] mPermissionList = new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.CALL_PHONE, android.Manifest.permission.READ_LOGS, android.Manifest.permission.READ_PHONE_STATE, android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.SET_DEBUG_APP, android.Manifest.permission.SYSTEM_ALERT_WINDOW, android.Manifest.permission.GET_ACCOUNTS, android.Manifest.permission.WRITE_APN_SETTINGS};
+      ActivityCompat.requestPermissions(this, mPermissionList, 123);
+    }
+  }
   private void initView() {
 
     vNoNetWork = findViewById(R.id.no_network_view);
@@ -111,14 +121,11 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
     webView.setWebViewClient(new WebViewClient() {
       @Override
       public boolean shouldOverrideUrlLoading(WebView view, String url) {
-        //非url
-        if (!url.contains("djtiyu.com")) {
-          webView.loadUrl(Constants.HOME_URL);
-          return true;
-        }
+
         if (url.contains("m_member_close")) {
           clearWebViewCache();
           webView.loadUrl(url);
+          showShareDialog();
           return true;
         }
         if (url.contains("m_login")) {
@@ -126,8 +133,11 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
           doAutoLogin();
           return true;
         }
+        if (url.contains("m_DJshare.html")) {
+          showShareDialog();
+          return true;
+        }
         lastUrl = url;
-
         if (url.contains("m_enter")) {
           lastUrl = null;
         }
@@ -137,14 +147,11 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
 
       @Override
       public void onPageStarted(WebView view, String url, Bitmap favicon) {
-        if (!url.contains("djtiyu.com")) {
-          webView.loadUrl(Constants.HOME_URL);
-          return;
-        }
-        if ( url.contains("m_hall") || url.contains("circle-homepage")
+
+        if (url.contains("m_hall") || url.contains("circle-homepage")
             || url.contains("m_rankhome") || url.contains("m_shopping")
             || url.contains("m_show-competition")) {
-          if(!checkedUpdate){
+          if (!checkedUpdate) {
             updateManagerService.checkVersion();
             checkedUpdate = true;
           }
@@ -243,37 +250,6 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
     switchTo(LoginActivity.class);
   }
 
-  private void doLogin() {
-    if (progressDialog == null) {
-      progressDialog = new CustomProgressDialog(this, "正在登录...", false);
-    }
-    progressDialog.setMsg("正在登录...");
-    progressDialog.show();
-    List<NameValuePair> paramspost = new ArrayList<NameValuePair>();
-    paramspost.add(new BasicNameValuePair("loginName_login", acc));
-    paramspost.add(new BasicNameValuePair("passWord_login", pwd));
-    networkHandler.post(Constants.LOGIN_URL, paramspost, 15, new Callback<TransResp>() {
-      @Override
-      public void callback(TransResp transResp) {
-        if (transResp.getRetcode() == 200) {
-          progressDialog.dismiss();
-          if ("0".equals(transResp.getRetjson())) {
-            loadMain();
-            return;
-          } else {
-            Toast.makeText(MainActivity.this, "登录失败了", Toast.LENGTH_SHORT).show();
-            switchTo(LoginActivity.class);
-          }
-        } else {
-          progressDialog.dismiss();
-          Toast.makeText(MainActivity.this, "登录失败了", Toast.LENGTH_SHORT).show();
-          switchTo(LoginActivity.class);
-          return;
-        }
-      }
-    });
-
-  }
 
   private long exitTime = 0;
 
@@ -299,12 +275,12 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
         needBackHome = false;
         return true;
       }
-      if(isRegister){
+      if (isRegister) {
         switchTo(LoginActivity.class);
         isRegister = false;
         return true;
       }
-      if(isPwdForget){
+      if (isPwdForget) {
         switchTo(LoginActivity.class);
         isPwdForget = false;
         return true;
@@ -428,6 +404,7 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
         }
         break;
       default:
+        UMShareAPI.get(this).onActivityResult(requestCode, resultCode, data);
         break;
     }
     super.onActivityResult(requestCode, resultCode, data);
@@ -508,22 +485,21 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
     // 清除cookie即可彻底清除缓存
     CookieSyncManager.createInstance(this);
     CookieManager.getInstance().removeAllCookie();
-    Constants.LOGINCOOKIE = null;
+    Constants.COOKIESTR = "";
     dbHelper.saveOrUpdateKeyValue(BeanPropEnum.AppProp.pwd.toString(), "");
   }
 
   private void loadMain() {
-    if (Constants.LOGINCOOKIE != null) {
+    if (!CommonUtil.isEmpty(Constants.COOKIESTR)) {
       CookieSyncManager.createInstance(MainActivity.this);
       CookieManager cookieManager = CookieManager.getInstance();
-      Cookie sessionCookie = Constants.LOGINCOOKIE;
-      if (sessionCookie != null) {
-        String cookieString = sessionCookie.getName() + "="
-            + sessionCookie.getValue() + "; domain="
-            + sessionCookie.getDomain();
-        cookieManager.setCookie(Constants.HOME_URL, cookieString);
-        CookieSyncManager.getInstance().sync();
-      }
+//      Cookie sessionCookie = Constants.LOGINCOOKIE;
+//        String cookieString = sessionCookie.getName() + "="
+//            + sessionCookie.getValue() + "; domain="
+//            + sessionCookie.getDomain();
+      Constants.COOKIESTR += ";domain=.djtiyu.com";
+      cookieManager.setCookie(Constants.HOME_URL, Constants.COOKIESTR);
+      CookieSyncManager.getInstance().sync();
     }
     if (!CommonUtil.isEmpty(lastUrl)) {
       webView.loadUrl(lastUrl);
@@ -630,4 +606,103 @@ public class MainActivity extends BaseActivity implements ActionSheet.ActionShee
     unregisterReceiver(mMessageReceiver);
     super.onDestroy();
   }
+  private UMImage image;
+  private ShareAction shareAction;
+  private Dialog shareDialog;
+  private SHARE_MEDIA platform = null;
+  private void showShareDialog() {
+    if (shareDialog == null) {
+      acc = dbHelper.getValue(BeanPropEnum.AppProp.acc.toString());
+      shareContent = "http://m.djtiyu.com/myphone/html/m_hall.html?id="+acc;
+      View view = LayoutInflater.from(this).inflate(R.layout.share_dialog, null);
+      shareDialog = new Dialog(this, R.style.common_dialog);
+      shareDialog.setContentView(view);
+      shareAction = new ShareAction(MainActivity.this);
+      image = new UMImage(MainActivity.this, R.mipmap.ic_launcher);
+      shareAction.withText("点将体育").withTitle("点将体育").withTargetUrl(shareContent).withMedia(image);
+      shareDialog.show();
+      View.OnClickListener listener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View v) {
+          switch (v.getId()) {
+
+            case R.id.view_share_qq:
+              platform = SHARE_MEDIA.QQ;
+              shareAction.setPlatform(platform).setCallback(umShareListener).share();
+              break;
+            case R.id.view_share_qqzone:
+              platform = SHARE_MEDIA.QZONE;
+              shareAction.setPlatform(platform).setCallback(umShareListener).share();
+              break;
+            case R.id.view_share_wechat:
+              platform = SHARE_MEDIA.WEIXIN;
+              shareAction.setPlatform(platform).setCallback(umShareListener).share();
+              break;
+            case R.id.view_share_wechatcircle:
+              platform = SHARE_MEDIA.WEIXIN_CIRCLE;
+              shareAction.setPlatform(platform).setCallback(umShareListener).share();
+              break;
+            case R.id.view_share_sina:
+              platform = SHARE_MEDIA.SINA;
+              shareAction.setPlatform(platform).setCallback(umShareListener).share();
+              break;
+            case R.id.view_share_copy:
+              try {
+                ClipData myClip = ClipData.newPlainText("text", shareContent);
+                ClipboardManager cmb = (ClipboardManager) MainActivity.this
+                    .getSystemService(Context.CLIPBOARD_SERVICE);
+                cmb.setPrimaryClip(myClip);
+                Toast.makeText(MainActivity.this, "复制链接成功",
+                    Toast.LENGTH_SHORT).show();
+              }catch (Exception e){
+                Toast.makeText(MainActivity.this, "复制链接失败",
+                    Toast.LENGTH_SHORT).show();
+              }
+              break;
+            case R.id.share_cancel_btn:
+              // 取消
+              break;
+          }
+          shareDialog.dismiss();
+        }
+      };
+      view.findViewById(R.id.view_share_qq).setOnClickListener(listener);
+      view.findViewById(R.id.view_share_qqzone).setOnClickListener(listener);
+      view.findViewById(R.id.view_share_wechat).setOnClickListener(listener);
+      view.findViewById(R.id.view_share_wechatcircle).setOnClickListener(listener);
+      view.findViewById(R.id.view_share_sina).setOnClickListener(listener);
+      view.findViewById(R.id.view_share_copy).setOnClickListener(listener);
+      view.findViewById(R.id.share_cancel_btn).setOnClickListener(listener);
+
+      Window window = shareDialog.getWindow();
+      window.getDecorView().setPadding(0, 0, 0, 0);
+      WindowManager.LayoutParams params = window.getAttributes();
+      params.width = ViewGroup.LayoutParams.MATCH_PARENT;
+      params.gravity = Gravity.BOTTOM;
+      window.setAttributes(params);
+    } else {
+      shareDialog.show();
+    }
+  }
+
+
+  private UMShareListener umShareListener = new UMShareListener() {
+    @Override
+    public void onResult(SHARE_MEDIA platform) {
+      if(shareDialog.isShowing()){
+        shareDialog.dismiss();
+      }
+      Toast.makeText(MainActivity.this, "分享成功啦", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onError(SHARE_MEDIA platform, Throwable t) {
+      Toast.makeText(MainActivity.this," 分享失败啦，请稍后再试", Toast.LENGTH_SHORT).show();
+    }
+    @Override
+    public void onCancel(SHARE_MEDIA platform) {
+      Toast.makeText(MainActivity.this,"分享取消", Toast.LENGTH_SHORT).show();
+    }
+  };
 }

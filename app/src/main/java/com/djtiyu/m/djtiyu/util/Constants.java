@@ -1,7 +1,5 @@
 package com.djtiyu.m.djtiyu.util;
 
-import org.apache.http.cookie.Cookie;
-
 /**
  * Created by shuwei on 16/9/9.
  */
@@ -23,7 +21,8 @@ public class Constants {
 
   public static final String LOGIN_AUTH_URL = "http://m.djtiyu.com/myphone/html/m_LoginPlayerInfo";
 
-  public static Cookie LOGINCOOKIE;
+  public static String COOKIESTR;
+
   public static final String QQ_APPID="1105749996";
   public static final String QQ_APPKEY="0cPspOY6S7QU0Mx6";
 

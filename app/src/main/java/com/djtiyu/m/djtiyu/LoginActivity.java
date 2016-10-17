@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import com.djtiyu.m.djtiyu.db.BeanPropEnum;
 import com.djtiyu.m.djtiyu.db.MsgCodeBean;
+import com.djtiyu.m.djtiyu.db.NameValuePair;
 import com.djtiyu.m.djtiyu.db.QQRetBean;
 import com.djtiyu.m.djtiyu.db.QQUserInfor;
 import com.djtiyu.m.djtiyu.util.Callback;
@@ -21,15 +22,9 @@ import com.djtiyu.m.djtiyu.util.Constants;
 import com.djtiyu.m.djtiyu.util.CustomProgressDialog;
 import com.djtiyu.m.djtiyu.util.TransResp;
 import com.google.gson.Gson;
-import com.umeng.socialize.Config;
-import com.umeng.socialize.PlatformConfig;
 import com.umeng.socialize.UMAuthListener;
-import com.umeng.socialize.UMShareAPI;
 import com.umeng.socialize.bean.SHARE_MEDIA;
 
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +37,7 @@ public class LoginActivity extends BaseActivity {
   private View vGoaway, vRegisterBtn, vForgetBtn, vLoginBtn, vLoginByWechat, vLoginByQQ, vLoginBySina;
   private EditText vAcc, vPwd;
   private String acc, pwd;
-  private UMShareAPI mShareAPI = null;
+
   private Gson gson = new Gson();
 
 
@@ -50,7 +45,6 @@ public class LoginActivity extends BaseActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_login);
-    setPlatform();
     initView();
     authPer();
   }
@@ -58,19 +52,8 @@ public class LoginActivity extends BaseActivity {
   private void authPer() {
     if (Build.VERSION.SDK_INT >= 23) {
       String[] mPermissionList = new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.CALL_PHONE, android.Manifest.permission.READ_LOGS, android.Manifest.permission.READ_PHONE_STATE, android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.SET_DEBUG_APP, android.Manifest.permission.SYSTEM_ALERT_WINDOW, android.Manifest.permission.GET_ACCOUNTS, android.Manifest.permission.WRITE_APN_SETTINGS};
-      //TODO
+      ActivityCompat.requestPermissions(this, mPermissionList, 123);
     }
-  }
-
-  private void setPlatform() {
-    //微信
-    PlatformConfig.setWeixin(Constants.WECHAT_APPID, Constants.WECHAT_APPKEY);
-    //新浪微博
-    PlatformConfig.setSinaWeibo(Constants.SINA_APPID, Constants.SINA_APPKEY);
-    // qq qzone appid appkey
-    PlatformConfig.setQQZone(Constants.QQ_APPID, Constants.QQ_APPKEY);
-    mShareAPI = UMShareAPI.get(this);
-    Config.REDIRECT_URL="http://sns.whalecloud.com/sina2/callback";
   }
 
   private void initView() {
@@ -165,15 +148,15 @@ public class LoginActivity extends BaseActivity {
       return;
     }
     if (progressDialog == null) {
-      progressDialog = new CustomProgressDialog(this, "正在登录...", false);
+      progressDialog = CustomProgressDialog.show(this, "正在登录...", false);
     }
-    progressDialog.setMsg("正在登录...");
+
     progressDialog.show();
     //acc = "18217530165";
     //pwd = "123456";
     List<NameValuePair> paramspost = new ArrayList<NameValuePair>();
-    paramspost.add(new BasicNameValuePair("loginName_login", acc));
-    paramspost.add(new BasicNameValuePair("passWord_login", pwd));
+    paramspost.add(new NameValuePair("loginName_login", acc));
+    paramspost.add(new NameValuePair("passWord_login", pwd));
     networkHandler.post(Constants.LOGIN_URL, paramspost, 15, new Callback<TransResp>() {
       @Override
       public void callback(TransResp transResp) {
@@ -276,10 +259,11 @@ public class LoginActivity extends BaseActivity {
 
   private void getUserInfor(SHARE_MEDIA platform, Map<String, String> data) {
     if (progressDialog == null) {
-      progressDialog = new CustomProgressDialog(this, "正在授权...", false);
+      progressDialog = CustomProgressDialog.show(this, "正在授权...", false);
     }
-    progressDialog.setMsg("正在授权...");
-    progressDialog.show();
+    if(!progressDialog.isShowing()){
+      progressDialog.show();
+    }
     String url = "";
     final QQRetBean qqRetBean = new QQRetBean();
     if (platform == SHARE_MEDIA.QQ) {
@@ -306,7 +290,7 @@ public class LoginActivity extends BaseActivity {
     networkHandler.get(url, null, 30, new Callback<TransResp>() {
           @Override
           public void callback(TransResp transResp) {
-            if (transResp.getRetcode() == HttpStatus.SC_OK) {
+            if (transResp.getRetcode() == 200) {
               try {
                 QQUserInfor userInfor = gson.fromJson(transResp.getRetjson(), QQUserInfor.class);
                 userInfor.setAccess_token(qqRetBean.getAccess_token());
@@ -339,7 +323,7 @@ public class LoginActivity extends BaseActivity {
     networkHandler.postJson(Constants.LOGIN_AUTH_URL, json, 30, new Callback<TransResp>() {
       @Override
       public void callback(TransResp transResp) {
-        if (transResp.getRetcode() == HttpStatus.SC_OK) {
+        if (transResp.getRetcode() == 200) {
           progressDialog.dismiss();
           MsgCodeBean bean = gson.fromJson(transResp.getRetjson(), MsgCodeBean.class);
           if (bean != null && bean.getStatus().equals("success")) {

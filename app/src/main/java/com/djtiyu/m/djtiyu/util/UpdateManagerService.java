@@ -18,8 +18,6 @@ import com.djtiyu.m.djtiyu.MainActivity;
 import com.djtiyu.m.djtiyu.R;
 import com.google.gson.Gson;
 
-import org.apache.http.HttpStatus;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -84,7 +82,7 @@ public class UpdateManagerService {
 		networkHandler.post(Constants.VER_URL, null, 30, new Callback<TransResp>() {
 			@Override
 			public void callback(TransResp transResp) {
-				if (transResp.getRetcode() == HttpStatus.SC_OK) {
+				if (transResp.getRetcode() == 200) {
 					String ret = transResp.getRetjson();
 					if (!CommonUtil.isEmpty(ret)) {
 						Gson gson = new Gson();
@@ -235,7 +233,7 @@ public class UpdateManagerService {
 			httpURLConnection.setReadTimeout(TIMEOUT);
 			// 获取下载文件的size
 			totalSize = httpURLConnection.getContentLength();
-			if (httpURLConnection.getResponseCode() != HttpStatus.SC_OK) {
+			if (httpURLConnection.getResponseCode() != 200) {
 				httpURLConnection.disconnect();
 				return 0;
 			}
